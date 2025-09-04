@@ -3,13 +3,14 @@ from dashboard.services.logger_job import RunLogger
 from pydantic import BaseModel, PositiveInt
 from typing import Optional
 from time import sleep
+from dashboard.constants import JobKind
 
 class DummyJobParams(BaseModel):
     wait_time_ms: Optional[PositiveInt] = 0
     message: Optional[str] = None
 
 
-@register('DUMMY', DummyJobParams)
+@register(JobKind.DUMMY, DummyJobParams)
 def dummy_job(_, logger: RunLogger, params: DummyJobParams):
     message = "Starting dummy job" if not params.message else f"Starting dummmy job: {params}"
     logger.info(message)

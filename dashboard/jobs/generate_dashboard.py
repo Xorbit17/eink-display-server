@@ -10,8 +10,9 @@ from dashboard.services.logger_job import RunLogger
 from dashboard.services.generate_art import run_art_generation_pipeline, ImageProcessingContext
 from django.utils import timezone
 from dashboard.services.render_page import render_png
+from dashboard.constants import JobKind
 
-@register("DASHBOARD")
+@register(JobKind.DUMMY)
 def generate_dashboard(job: Job, logger: RunLogger, params):
     now = timezone.now()
 

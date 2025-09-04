@@ -7,12 +7,14 @@ from django.utils import timezone
 from datetime import timedelta
 from dashboard.models.calendar import CalendarOccurrence, CalendarSource
 from django.db import transaction
+from dashboard.constants import JobKind
+
 
 class CalendarJobParams(BaseModel):
     days_ahead: Optional[int] = None
 
 
-@register('CALENDAR', CalendarJobParams)
+@register(JobKind.CALENDAR, CalendarJobParams)
 def get_calendar(_, logger: RunLogger, params=CalendarJobParams):
     logger.info("Starting calendar job")
     start = timezone.now()

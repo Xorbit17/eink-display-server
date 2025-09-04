@@ -6,6 +6,7 @@ import dashboard.services.get_weather as weather_service
 from dashboard.services.util import convert_unix_dt_to_datetime, local_date
 import datetime
 from dataclasses import dataclass
+from dashboard.constants import JobKind
 
 @dataclass
 class Context:
@@ -69,7 +70,7 @@ def process_record(input: weather_service.DailyItem, location: Location, context
     return day_forecast
 
 
-@register('WEATHER')
+@register(JobKind.WEATHER)
 def get_weather(_, logger: RunLogger, params):
     now = timezone.now()
     locations = Location.objects.all()

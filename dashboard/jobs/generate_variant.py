@@ -10,6 +10,7 @@ from dashboard.services.classify_image import ImageClassification
 from random import random, choice
 from typing import cast, Optional
 from dashboard.services.scoring import calculate_static_score
+from dashboard.constants import JobKind
 
 class GenerateVariantParams(BaseModel):
     source_image_id: int
@@ -32,7 +33,7 @@ def decide_art_style(classification: ImageClassification) ->  ArtStyle:
     random_art_style = choice(art_style_list)
     return cast(ArtStyle,random_art_style)
 
-@register('ART', GenerateVariantParams)
+@register(JobKind.ART, GenerateVariantParams)
 def generate_variant(job: Job, logger: RunLogger, params: GenerateVariantParams | None):
     if not params:
         raise RuntimeError("generate variant requires params")
@@ -68,19 +69,26 @@ def generate_variant(job: Job, logger: RunLogger, params: GenerateVariantParams 
     )
 
     pipeline_info = next(t for t in art_styles if t[0]==art_style)
+
+    output = input.resolve().parent / "variants" / f"variants_{src.pk}.png"
+    pipeline=pipeline_info[1]
+    pipeline_args=pipeline_info[2]
+    # We append the file writing to the end of the pipeline.
+    # Pipeline needs refactoring though
+    pipeline.append("output_image")
+    pipeline_args.append((output,"png"))
+
     context = ImageProcessingContext(
         classification=classification,
         art_style=art_style,
-        pipeline=pipeline_info[1],
-        pipeline_args=pipeline_info[2],
+        pipeline=pipeline,
+        pipeline_args=pipeline_args,
         logger=logger,
     )
-    ext = pipeline_info[2][-1]
-    output = input.resolve().parent / "variants" / f"variants_{src.pk}.{ext}"
+
     try:
         run_art_generation_pipeline(
             input,
-            output,
             context=context
         )
         logger.info("Image processing pipeline finished for artwork.")

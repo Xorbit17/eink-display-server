@@ -14,6 +14,7 @@ from dashboard.services.classify_image import classify_image
 from dashboard.jobs.job_registry import register
 from PIL import Image
 import json
+from dashboard.constants import JobKind
 
 
 def find_files() -> set[str]:
@@ -53,7 +54,7 @@ def classify_new_image(path: str, logger: RunLogger, params: dict | None):
     logger.info(f"Image with path \"{path}\"\nSource image id:{source_image.pk}\nclassification:\n{json.dumps(serialisable_classification, indent=4)}")
 
 
-@register("CLASSIFY")
+@register(JobKind.CLASSIFY)
 def classify_images(job: Job, logger: RunLogger, params: dict | None):
     max_num_to_classify = int((params or {}).get("max_num_to_classify", 1))
     if max_num_to_classify <= 0:
