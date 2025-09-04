@@ -8,8 +8,7 @@ from croniter import croniter
 
 from dashboard.models.job import Job, Execution
 from dashboard.jobs.job_registry import run_execution
-from .time_util import sleep_until_next_minute, next_minute_start
-from daemon import time_util
+from .time_util import sleep_until_next_minute
 import asyncio
 
 ACTIVE_STATUSES = [RUNNING, QUEUED]

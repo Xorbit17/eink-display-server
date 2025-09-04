@@ -6,9 +6,7 @@ from django.utils import timezone
 from dashboard.services.scoring import calculate_final_score
 from dashboard.models.photos import Variant
 from typing import Iterable, List, Tuple
-import os
 import random
-import mimetypes
 from bisect import bisect
 
 def _weighted_choice(items: Iterable[Tuple[Variant, float]]) -> Variant:

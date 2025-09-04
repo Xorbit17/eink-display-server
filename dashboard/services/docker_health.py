@@ -1,6 +1,6 @@
 from __future__ import annotations
 from dataclasses import dataclass
-from typing import List, Optional, Literal, Dict
+from typing import List, Literal, Dict
 import docker
 
 

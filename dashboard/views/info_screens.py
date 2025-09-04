@@ -1,16 +1,11 @@
 from dataclasses import dataclass, asdict
-from typing import List, Tuple, Dict, Literal
+from typing import List
 from datetime import datetime
-from dashboard.services.machine_stats import MachineStats, disk_usage_snapshot, DiskStat
-from dashboard.services.docker_health import ContainerHealth, get_container_health
-from dashboard.services.get_weather import wind_ms_to_beaufort, get_direction_letter_from_wind_dir, get_icon_from_code
 from django.shortcuts import render
 from django.views import View
 from django.utils import timezone
-from django.db.models import Prefetch
-from django.http import JsonResponse, FileResponse
+from django.http import JsonResponse
 from django.core.exceptions import ObjectDoesNotExist
-from dashboard.services.util import convert_unix_dt_to_datetime, local_date, bytes_to_size_notation
 from dashboard.models.schedule import Display
 from pydantic import BaseModel, ValidationError
 import socket

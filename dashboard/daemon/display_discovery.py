@@ -1,6 +1,8 @@
 
 from django.conf import settings
-import asyncio, json, socket, time
+import asyncio
+import json
+import socket
 
 DISCOVERY_PORT = getattr(settings, "DISCOVERY_PORT", 51234)
 PUBLIC_BASE_URL = getattr(settings, "PUBLIC_BASE_URL", "http://localhost:8000")

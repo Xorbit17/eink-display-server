@@ -1,13 +1,7 @@
 from django.core.management.base import BaseCommand, CommandError
-from dashboard.constants import JOB_KIND_CHOICES, JobKind, RUNNING
+from dashboard.constants import JOB_KIND_CHOICES, JobKind
 from dashboard.jobs.job_registry import test_job
 
-import dashboard.jobs.classify
-import dashboard.jobs.dummy_job
-import dashboard.jobs.generate_variant
-import dashboard.jobs.get_weather
-import dashboard.jobs.calendar
-import dashboard.jobs.generate_dashboard
 
 from typing import cast, Dict, Any
 import json

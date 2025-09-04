@@ -1,9 +1,9 @@
 from dataclasses import dataclass, field
-from typing import Optional, Dict, Any, cast
+from typing import Optional, Dict, Any
 from django.utils import timezone
 import traceback
 from dashboard.models.job import Job, JobLogEntry, Execution
-from dashboard.constants import RUNNING, QUEUED, SUCCESS, ERROR, JobKind
+from dashboard.constants import RUNNING, SUCCESS, ERROR
 
 MAX_LINES_PER_RUN = 500
 

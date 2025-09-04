@@ -1,12 +1,11 @@
 from dashboard.jobs.job_registry import register
 from dashboard.services.logger_job import RunLogger
-from pydantic import BaseModel, PositiveInt
+from pydantic import BaseModel
 from typing import Optional
 import dashboard.services.get_calendar as service
 from django.utils import timezone
 from datetime import timedelta
 from dashboard.models.calendar import CalendarOccurrence, CalendarSource
-from dashboard.constants import LOCAL_TZ, ICAL_GOOGLE_CALENDAR_URL
 from django.db import transaction
 
 class CalendarJobParams(BaseModel):

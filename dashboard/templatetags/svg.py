@@ -2,7 +2,7 @@ from django import template
 from django.contrib.staticfiles import finders
 from django.utils.safestring import mark_safe
 from pathlib import Path
-from typing import cast, Dict, Literal
+from typing import cast
 from functools import cache
 
 register = template.Library()

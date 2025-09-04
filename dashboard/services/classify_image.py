@@ -1,7 +1,6 @@
 from __future__ import annotations
 from dashboard.services.openai import openai_client
 from dashboard.constants import (
-    IMAGE_DIR,
     IMAGE_EXTENSIONS,
     MIME_BY_EXT,
 )
@@ -12,9 +11,7 @@ from dashboard.jobs.image_processing_declaration import (
 )
 from dashboard.services.image_processing import file_to_base64
 from pathlib import Path
-import base64
 from pydantic import BaseModel
-from openai import BadRequestError
 
 
 CLASSIFY_PROMPT = (

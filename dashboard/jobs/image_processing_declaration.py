@@ -1,6 +1,5 @@
-from typing import List, Tuple, Final, Dict, Callable, Any, Literal, TypeAlias
+from typing import List, Tuple, Final, Dict, Literal, TypeAlias
 from dashboard.color_constants import SHADED_PALETTE_SET
-from dataclasses import dataclass
 
 
 NOT_SUITED: Final[str] = "NOT_SUITED"

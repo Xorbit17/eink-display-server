@@ -1,5 +1,5 @@
 from zoneinfo import ZoneInfo
-from typing import Literal, Dict, List, Tuple, TypeAlias
+from typing import Literal, Dict, TypeAlias
 from pathlib import Path
 
 def parse_env_file(path: str | Path) -> Dict[str, str]:

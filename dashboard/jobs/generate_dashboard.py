@@ -4,7 +4,6 @@ from dashboard.constants import (
 )
 from dashboard.color_constants import EXTENDED_PALETTE_SET
 from pathlib import Path
-from dashboard.jobs.job_registry import register
 from dashboard.models.job import Job
 from dashboard.models.application import PrerenderedDashboard
 from dashboard.services.logger_job import RunLogger

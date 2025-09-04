@@ -1,6 +1,5 @@
 from dashboard.jobs.job_registry import register
 from dashboard.services.logger_job import RunLogger
-from time import sleep
 from django.utils import timezone
 from dashboard.models.weather import DayForecast, Location, WeatherDetail
 import dashboard.services.get_weather as weather_service

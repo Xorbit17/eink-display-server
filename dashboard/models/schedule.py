@@ -9,7 +9,7 @@ from django.core.exceptions import ValidationError
 from django.db import models
 from django.utils import timezone
 from zoneinfo import ZoneInfo
-from dashboard.constants import MODE_CHOICES, NEWS_MODE, PHOTO_MODE, WEEKDAY_CHOICES, ModeKind
+from dashboard.constants import MODE_CHOICES, PHOTO_MODE, WEEKDAY_CHOICES, ModeKind
 from django.contrib.auth.models import User
 
 MIDNIGHT = time(0,0,0)

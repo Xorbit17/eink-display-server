@@ -1,11 +1,9 @@
 from typing import Callable, Dict, Any, Tuple, Type
-from dashboard.constants import JobKind, RUNNING, QUEUED, MANUAL, CRON
+from dashboard.constants import JobKind, RUNNING, MANUAL
 from dashboard.models.job import Job, Execution
 from django.utils import timezone
-from django.core.exceptions import ObjectDoesNotExist
 
-from datetime import datetime
-from typing import Optional, Dict, cast
+from typing import Optional, cast
 from django.db import transaction
 from pydantic import BaseModel
 

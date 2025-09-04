@@ -1,4 +1,3 @@
-from django.shortcuts import render
 from django.views import View
 from dashboard.services.select_image import get_variant
 from django.http import FileResponse, Http404

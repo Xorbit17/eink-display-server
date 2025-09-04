@@ -4,7 +4,6 @@ import asyncio
 import psutil
 from datetime import datetime
 from django.db import close_old_connections
-from django.utils import timezone
 
 from .time_util import sleep_until_next_minute, sleep_until_monotonic
 from dashboard.models.application import MinuteSystemSample

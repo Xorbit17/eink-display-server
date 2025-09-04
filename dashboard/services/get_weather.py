@@ -2,8 +2,6 @@ import re
 import requests
 
 from dashboard.constants import OPENWEATHERMAP_KEY
-import datetime as python_datetime
-from django.utils.timezone import make_aware
 from typing import List, Optional, Iterable, Tuple
 from pydantic import BaseModel, ValidationError
 

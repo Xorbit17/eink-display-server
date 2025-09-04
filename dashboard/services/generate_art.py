@@ -5,10 +5,8 @@ from django.template import Context, Template
 from dashboard.services.openai import openai_client
 from dashboard.services.image_processing import pil_to_base64, base64_to_pil
 from dashboard.jobs.image_processing_declaration import ART_STYLE_CHOICES, CONTENT_TYPE_MARKDOWN, CONTENT_TYPE_CLASSIFICATION_CHOICES, PipelineArgs, PipelineSteps, ArtStyle
-from typing import Any, Callable, Iterable, List, Optional, Sequence, Tuple
+from typing import Any, Callable
 from dataclasses import dataclass, field
-from pydantic import BaseModel
-from PIL import Image
 from dashboard.services.classify_image import ImageClassification
 from io import BytesIO
 

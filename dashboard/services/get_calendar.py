@@ -1,8 +1,7 @@
 from datetime import datetime, time, timedelta
 from zoneinfo import ZoneInfo
-from django.db.models import Q
 from dashboard.models.calendar import CalendarOccurrence
-from dashboard.constants import LOCAL_TZ, ICAL_GOOGLE_CALENDAR_URL
+from dashboard.constants import LOCAL_TZ
 from ics import Calendar, Event
 import requests
 from django.utils import timezone

@@ -1,5 +1,5 @@
 from dataclasses import dataclass, asdict
-from typing import List, Tuple, Dict, Literal
+from typing import List, Literal
 from datetime import datetime, timedelta
 from dashboard.services.machine_stats import MachineStats, disk_usage_snapshot, DiskStat
 from dashboard.services.docker_health import ContainerHealth, get_container_health
@@ -8,10 +8,10 @@ from django.shortcuts import render
 from django.views import View
 from django.utils import timezone
 from django.db.models import Prefetch
-from dashboard.services.util import convert_unix_dt_to_datetime, local_date, bytes_to_size_notation
+from dashboard.services.util import local_date, bytes_to_size_notation
 from dashboard.models.weather import DayForecast, Location, WeatherDetail
 from dashboard.models.application import MinuteSystemSample
-from dashboard.models.calendar import CalendarOccurrence, CalendarSource
+from dashboard.models.calendar import CalendarOccurrence
 
 
 @dataclass

@@ -8,6 +8,4 @@ class DashboardConfig(AppConfig):
     name = 'dashboard'
 
     def ready(self) -> None:
-        import dashboard.jobs.classify
-        import dashboard.jobs.generate_variant
         return super().ready()

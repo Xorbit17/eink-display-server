@@ -76,6 +76,6 @@ def classify_images(job: Job, logger: RunLogger, params: dict | None):
             classify_new_image(image_path, logger, params=params)
     else:
         logger.debug(
-            f"No new images to classify"
+            "No new images to classify"
         ) 
     

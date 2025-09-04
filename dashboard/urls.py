@@ -4,10 +4,12 @@ from dashboard.views.home import HomeView
 from dashboard.views.photo import PhotoView
 from dashboard.views.display_service import DisplayDashboardView, DisplayVariantView, DisplayBootScreenView
 from dashboard.views.info_screens import BootScreenView
+from dashboard.views.health import HealthView
 
 urlpatterns = [
     path("", HomeView.as_view(), name="home"),  # matches "/"
     path("dashboard", DashboardView.as_view(), name="dashboard"),
+    path("health", HealthView.as_view(), name="health"),
     path("photo", PhotoView.as_view(), name="photo"),
     path("bootstrap", BootScreenView.as_view(), name="bootstrap"),
     # path("api/display/json/", DisplayJsonView.as_view(), name="display-json"),

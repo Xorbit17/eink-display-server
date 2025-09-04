@@ -4,7 +4,6 @@ ENV PIP_NO_CACHE_DIR=1 \
     PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1
 
-# Build deps for Pillow / pillow-heif wheels (header packages)
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
     pkg-config \
@@ -20,22 +19,17 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 WORKDIR /app
 
-# Copy requirements first to leverage layer caching
+# Copy requirements to leverage layer caching
 COPY requirements.txt /app/requirements.txt
 
 RUN python -m pip install --upgrade pip wheel \
  && pip wheel --wheel-dir /wheels -r /app/requirements.txt
 
-
-########################
-# Runtime: slim + only runtime libs
-########################
 FROM python:3.11-slim-bookworm AS runtime
 
 ARG APP_USER=app
 ARG APP_UID=10001
 ARG APP_GID=10001
-# Toggle Playwright/Chromium install to keep image small by default
 ARG PLAYWRIGHT=1
 
 ENV PIP_NO_CACHE_DIR=1 \
@@ -45,7 +39,6 @@ ENV PIP_NO_CACHE_DIR=1 \
     GUNICORN_THREADS=2 \
     GUNICORN_TIMEOUT=60
 
-# Runtime libs for Pillow / pillow-heif (no headers), plus curl for healthchecks
 RUN apt-get update && apt-get install -y --no-install-recommends \
     libjpeg62-turbo \
     zlib1g \
@@ -58,29 +51,23 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     curl \
     && rm -rf /var/lib/apt/lists/*
 
-# Optional Playwright + Chromium (heavy). Enable with --build-arg PLAYWRIGHT=1
 RUN if [ "$PLAYWRIGHT" = "1" ]; then \
       pip install --no-cache-dir playwright && \
       python -m playwright install --with-deps chromium; \
     fi
 
-# Non-root user
 RUN groupadd -g "${APP_GID}" "${APP_USER}" \
  && useradd --no-log-init -m -u "${APP_UID}" -g "${APP_GID}" -s /bin/bash "${APP_USER}"
 
 WORKDIR /app
 
-# Install deps from wheels built in the builder stage
 COPY --from=builder /wheels /wheels
 RUN pip install --no-cache-dir --no-index --find-links=/wheels /wheels/*
 
-# Copy your project (including requirements.txt if you want it in the image)
 COPY . /app
 
-# Ensure the run script is executable
 RUN chmod +x /app/run-service.sh
 
-# Drop privileges
 USER ${APP_USER}
 
 EXPOSE 8000
