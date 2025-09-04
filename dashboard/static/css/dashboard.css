@@ -1,0 +1,668 @@
+:root {
+    /*E-ink optimised*/
+    --red: rgb(156, 72, 75);
+    --green: rgb(58, 91, 70);
+    --blue: rgb(61, 59, 94);
+    --yellow: rgb(208, 190, 71);
+    --orange: rgb(185, 118, 110);
+    --purple: rgb(109, 66, 85);
+    --black: rgb(0, 0, 0);
+    --white: rgb(255, 255, 255);
+    --dark-grey: rgb(81, 82, 83);
+    --grey: rgb(161, 164, 165);
+    --very-light-grey: rgb(242, 242, 242);
+    --light-grey: rgb(208, 210, 210);
+    --light-blue: rgb(158, 157, 175);
+
+    --accent: var(--blue);
+    --accent-bg: var(--ligt-blue);
+
+    --bg: var(--very-light-grey);
+    /* very light grey, keep as-is */
+    --bg-card: var(--white);
+    --border: var(--black);
+    --border-medium: var(--dark-grey);
+    --border-light: var(--grey);
+
+    --screen-width: 1200px;
+    --screen-height: 1600px;
+    --unit-height: calc(100vh / 16);
+    --half-width: calc(var(--screen-width) /2);
+}
+
+/* Typography */
+html,
+body {
+    background: var(--white);
+    color: var(--text);
+    font-size: 12pt;
+    line-height: 1.35;
+    margin: 0;
+    padding: 0;
+
+    /* E-ink readability tweaks */
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+    font-family: system-ui, -apple-system, "Segoe UI", "DejaVu Sans", "Liberation Sans", Arial, sans-serif;
+}
+
+.dashboard-container {
+    width: var(--screen-width);
+    height: var(--screen-height);
+    margin: 0 auto;
+    background: var(--bg, #ffffff);
+    overflow: hidden;
+    position: relative;
+}
+
+/* Not a css grid anymore. Was changed to a flex with overflow */
+.grid {
+    display: flex;
+    flex-flow: wrap;
+    box-sizing: border-box;
+    align-content: flex-start;
+    width: var(--screen-width);
+    height: var(--screen-height);
+    gap: 16px 16px;
+    padding: 16px;
+}
+
+.card {
+    background: var(--bg-card);
+    padding: 8px 10px;
+    border-radius: 12px;
+    box-shadow: 5px 5px 0px var(--light-grey);
+    box-sizing: border-box;
+}
+
+.header {
+    flex: 0 1 calc(var(--screen-width) - 24px);
+    height: var(--unit-height);
+}
+
+.weather {
+    flex: 0 1 calc(var(--screen-width) - 24px);
+    height: calc(var(--unit-height) * 3);
+}
+
+.memory {
+    flex: 0 1 calc(var(--half-width) - 24px);
+    height: calc(var(--unit-height) * 3);
+}
+
+.cpu {
+    flex: 0 1 calc(var(--half-width) - 24px);
+    height: calc(var(--unit-height) * 3);
+}
+
+.network {
+    flex: 0 1 calc(var(--half-width) - 24px);
+    height: calc(var(--unit-height) * 3);
+}
+
+.disk {
+    flex: 0 1 calc(var(--half-width) - 24px);
+    height: calc(var(--unit-height) * 2);
+}
+
+.docker {
+    flex: 0 1 calc(var(--half-width) - 24px);
+    height: calc(var(--unit-height) * 3);
+}
+
+.calendar {
+    flex: 0 1 calc(var(--half-width) - 24px);
+    height: calc(var(--unit-height) * 5);
+}
+
+.transmission {
+    flex: 0 1 calc(var(--half-width) - 24px);
+    height: calc(var(--unit-height) * 3);
+}
+
+/* Header band */
+.header-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 6px;
+    border-bottom: 2px solid var(--border-medium);
+    padding-bottom: 6px;
+    min-width: 0;
+    /* allow shrink */
+}
+
+.title {
+    font-weight: 700;
+    font-size: 1.15rem;
+    display: inline-flex;
+    gap: 6px;
+    align-items: center;
+}
+
+.subtitle {
+    font-weight: 700;
+    margin-bottom: 2px;
+    font-size: larger;
+}
+
+.disk-size-label {
+    color: var(--dark-grey);
+    font-size: smaller;
+}
+
+.meta {
+    display: flex;
+    gap: 10px;
+    margin-top: 4px;
+    font-size: 0.95rem;
+}
+
+.badge {
+    padding: 2px 6px;
+    font-weight: 700;
+    border-radius: 6px;
+}
+
+.badge-accent {
+    color: var(--accent);
+    background: var(--accent-bg);
+}
+
+/* Alerts strip */
+.alerts {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 8px;
+    align-items: center;
+}
+
+.alert-label {
+    padding: 4px 6px;
+}
+
+.alert {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    border-radius: 6px;
+    padding: 4px 6px;
+    font-weight: 700;
+}
+
+.alert.info {
+    background: var(--blue-10);
+}
+
+.alert.warning {
+    background: var(--yellow-10);
+}
+
+.alert.danger {
+    background: var(--red-10);
+}
+
+.alert.good {
+    background: var(--green-10);
+}
+
+/* Section headers */
+.section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 8px;
+    border-bottom: 2px solid var(--border-medium);
+    padding-bottom: 4px;
+}
+
+.section-header h2 {
+    margin: 0;
+    font-size: 1.05rem;
+    display: inline-flex;
+    gap: 6px;
+    align-items: center;
+}
+
+/* WEATHER */
+.weather-cards {
+    display: flex;
+    flex-wrap: nowrap;
+    overflow: hidden;
+    justify-content: space-around;
+}
+
+.weather-cards>.weather-card {
+    padding-right: 12px;
+    margin-right: 12px;
+    border-right: 2px dashed var(--border-light);
+}
+
+.weather-cards>.weather-card:last-child {
+    padding-right: 0px;
+    margin-right: 0px;
+    border-right: 0px;
+}
+
+.weather-card {
+    flex: 1 1 128px;
+    background: var(--bg-card, #f2f2f2);
+    box-sizing: border-box;
+}
+
+
+
+.weather-card p {
+    padding: 0;
+    margin: 0;
+    line-height: 1.1;
+}
+
+.wc-title {
+    font-weight: 700;
+    margin-bottom: 4px;
+    text-align: center;
+}
+
+.wc-summary {
+    margin-top: 16px;
+    margin-bottom: 0px;
+    text-align: center;
+    font-size: smaller;
+}
+
+.wc-card-container {
+    display: grid;
+    grid-template-areas:
+        "wc-icon wc-icon wc-icon wc-icon wc-icon wc-wind"
+        "wc-icon wc-icon wc-icon wc-icon wc-icon wc-rain"
+        "wc-temp wc-temp wc-temp wc-feel wc-feel wc-feel";
+}
+
+.wc-icon {
+    grid-area: wc-icon;
+}
+
+.wc.wind {
+    grid-area: wc-wind;
+}
+
+.wc-rain {
+    grid-area: wc-rain;
+    font-size: small;
+}
+
+.wc-temp {
+    grid-area: wc-temp;
+}
+
+.wc-feel {
+    grid-area: wc-feel;
+    margin-left: 8px;
+}
+
+.wc-extra {
+    grid-area: wc-extra;
+}
+
+.wc-avg-min-max {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+}
+
+.wc-avg-min-max .avg {
+    font-size: x-large;
+    color: var(--black);
+    font-weight: bold;
+    margin-right: 8px;
+}
+
+.wc-avg-min-max .min {
+    font-size: small;
+    color: var(--blue);
+}
+
+.wc-avg-min-max .max {
+    font-size: small;
+    color: var(--red);
+}
+
+.wc-wind-dir {
+    font-size: x-large;
+    font-weight: bold;
+    color: var(--orange);
+}
+
+.wc-wind-bft {
+    font-size: x-large;
+    font-weight: bold;
+}
+
+.wc-feels-like {
+    color: var(--dark-grey);
+    font-size: smaller;
+}
+
+.wc-feels-avg {
+    font-weight: bold;
+    color: var(--dark-grey);
+}
+
+
+
+/* Optional: ensure any weather SVG/IMG icons stay within card bounds */
+.weather-card img,
+.weather-card svg {
+    max-width: 100%;
+    height: auto;
+    display: block;
+}
+
+/* Key-value compact lists */
+.kv {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px 12px;
+}
+
+.kv dt {
+    font-weight: 700;
+}
+
+.kv dd {
+    margin: 0;
+}
+
+/* Disks */
+.disk-list {
+    display: flex;
+}
+
+.disk-list>div {
+    padding-right: 12px;
+    margin-right: 12px;
+    border-right: 2px dashed var(--border-light);
+}
+
+.disk-list>div:last-child {
+    padding-right: 0px;
+    margin-right: 0px;
+    border-right: 0px;
+}
+
+
+.disk-item {
+    background: var(--bg-card);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    min-width: 0;
+}
+
+.disk-item>.disk-canvas {
+    flex: 0 1 50%;
+    max-height: 128px;
+    max-width: 128px;
+    aspect-ratio: 1;
+}
+
+.disk-item>.disk-info {
+    flex: 0 0 50%;
+}
+
+.disk-info p {
+    margin: 0 0 2px;
+}
+
+.disk-canvas {
+    display: block;
+    flex: 1 1 96px;
+}
+
+/* Stat graph */
+.stat-graph-list {
+    display: flex;
+    width: 100%;
+
+}
+
+.stat-graph-item {
+    display: block;
+    flex: 1 0 50%;
+}
+
+.stat-graph-canvas {
+    display: block;
+    width: 100% !important;
+    /* beat Chart.js inline width */
+    height: 100% !important;
+}
+
+/* Tables */
+.tbl {
+    width: calc(100% - 24px);
+    margin: 12px;
+    table-layout: fixed;
+}
+
+.tbl th,
+.tbl td {
+    padding: 6px 8px;
+}
+
+.tbl thead th {
+    background: var(--blue-10);
+    text-align: left;
+}
+
+.tbl thead tr>th:first-child {
+    border-radius: 6px 0px 0px 6px;
+}
+
+.tbl thead tr>th:last-child {
+    border-radius: 0px 6px 6px 0px;
+}
+
+
+/* Status dots (map to your palette) */
+.status-dot {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    margin-right: 6px;
+    vertical-align: middle;
+}
+
+.status-dot.running,
+.status-dot.healthy,
+.status-dot.good {
+    background: var(--green);
+}
+
+.status-dot.exited,
+.status-dot.stopped {
+    background: var(--yellow);
+}
+
+.status-dot.unhealthy,
+.status-dot.error,
+.status-dot.failed {
+    background: var(--red);
+}
+
+.status-dot.unknown {
+    background: var(--black);
+}
+
+/* Calendar */
+.calendar .calendar-block {
+    margin-bottom: 10px;
+}
+
+.calendar h3 {
+    margin: 6px 0 0;
+    font-size: medium;
+    font-weight: bolder;
+    border-bottom: 2px solid var(--border-light);
+}
+
+/* One grid for the whole list: first column fits widest .time */
+.calendar-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: grid;
+    grid-template-columns: max-content 1fr;
+    /* “tab stop” + flexible content */
+}
+
+/* Flatten rows so children participate in the parent grid */
+.calendar-list li,
+.calendar-list li h4 {
+    display: contents;
+}
+
+/* First column: all times share the same track width */
+.calendar-list .time {
+    grid-column: 1;
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+    /* aligns digits nicely */
+    padding-right:8px;
+    font-weight: normal;
+    font-size: smaller;
+    align-self: baseline;
+}
+
+/* Second column: title + optional location on the same line */
+.calendar-list .meta {
+    grid-column: 2;
+    min-width: 0;
+    /* allow wrapping */
+    align-self: baseline;
+}
+
+.calendar-list .title {
+    font-weight: 700;
+}
+
+.calendar-list .location {
+    margin-left: .4rem;
+    font-weight: normal;
+    font-size: smaller;
+    color: var(--light-blue);
+}
+
+/* Description sits indented under column 2 */
+.calendar-list .description {
+    grid-column: span 2;
+    font-weight: normal;
+    font-size: smaller;
+    margin-top: 0.1rem;
+}
+
+/* Row rule spanning both columns (replaces li borders) */
+.calendar-list .rule {
+    grid-column: 1 / -1;
+    border-bottom: 2px dashed var(--border-light);
+    margin: 2px 0 6px;
+    /* similar spacing to your old .line padding */
+}
+
+/* Hide the last rule in each list */
+.calendar-list .rule:last-child {
+    display: none;
+}
+
+/* Icons */
+.icon {
+    width: 32px;
+    height: 32px;
+    display: inline-block;
+    vertical-align: middle;
+}
+
+.icon.icon.small {
+    width: 24px;
+    height: 24px;
+}
+
+.icon.icon-xsmall {
+    width: 16px;
+    height: 16px;
+}
+
+
+.icon svg {
+    width: 100%;
+    height: 100%;
+    stroke: currentColor;
+    fill: none;
+    stroke-width: 2;
+}
+
+.weather-icon {
+    display: inline-block;
+    vertical-align: middle;
+}
+
+.icon-red {
+    color: var(--red)
+}
+
+.icon-green {
+    color: var(--green)
+}
+
+.icon-blue {
+    color: var(--blue)
+}
+
+.icon-yellow {
+    color: var(--yellow-dark-50)
+}
+
+.icon-grey {
+    color: var(--grey)
+}
+
+.icon-orange {
+    color: var(--orange)
+}
+
+
+
+/* Print-like clarity for e-ink export */
+@media print {
+    body {
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+}
+
+/* Optional: narrow fallback stacks the grid (useful during dev on a laptop) */
+@media (max-width: 1100px) {
+    .grid {
+        grid-template-columns: 1fr;
+        grid-template-areas:
+            "header"
+            "weather"
+            "calendar"
+            "system"
+            "disk"
+            "cpu"
+            "network"
+            "docker";
+    }
+
+    .weather-cards {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}

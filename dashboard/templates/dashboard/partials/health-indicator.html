@@ -1,0 +1,34 @@
+{% load svg %}
+{% if status == "created" %}
+ <span class="icon icon-gray">{% svg "circle-plus.svg" %}</span>
+{% endif %}
+{% if status == "running" %}
+ <span class="icon icon-green">{% svg "player-play.svg" %}</span>
+{% endif %}
+{% if status == "restarting" %}
+ <span class="icon icon-yellow">{% svg "rotate.svg" %}</span>
+{% endif %}
+{% if status == "removing" %}
+ <span class="icon icon-red">{% svg "trash.svg" %}</span>
+{% endif %}
+{% if status == "paused" %}
+ <span class="icon icon-blue">{% svg "player-pause.svg" %}</span>
+{% endif %}
+{% if status == "exited" %}
+ <span class="icon icon-gray">{% svg "player-stop.svg" %}</span>
+{% endif %}
+{% if status == "dead" %}
+ <span class="icon icon-red">{% svg "skull.svg" %}</span>
+{% endif %}
+{% if status == "starting" %}
+ <span class="icon icon-yellow">{% svg "clock.svg" %}</span>
+{% endif %}
+{% if status == "healthy" %}
+ <span class="icon icon-green">{% svg "heartbeat.svg" %}</span>
+{% endif %}
+{% if status == "unhealthy" %}
+ <span class="icon icon-red">{% svg "heart-broken.svg" %}</span>
+{% endif %}
+{% if status == "none" %}
+ <span class="icon icon-gray">{% svg "ban.svg" %}</span>
+{% endif %}

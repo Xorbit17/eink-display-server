@@ -1,0 +1,52 @@
+{% load svg %}
+{% with updated_at=calendar.updated_at today=calendar.today later=calendar.rest %}
+<section class="card calendar" aria-label="calendar">
+    <header class="section-header">
+        <h2><span class="icon">{% svg "calendar.svg" %}</span> Calendar</h2>
+        <small>Updated: {{ calendar.updated_at|date:"H:i" }}</small>
+    </header>
+    <div class="calendar-block">
+    <h3>Today</h3>
+    {% if not today %}
+        <div class="muted">No events</div>
+    {% else %}
+        <ul class="calendar-list">
+        {% for item in today %}
+            <li class="line">
+            <h4>
+                <span class="time">{{ item.start|date:"H:i" }} - {{ item.end|date:"H:i" }}:</span>
+                <span class="meta">
+                <span class="title">{{ item.title }}</span>
+                {% if item.location %}<span class="location">{{ item.location }}</span>{% endif %}
+                </span>
+            </h4>
+            {% if item.description %}
+                <div class="description">• {{ item.description }}</div>
+            {% endif %}
+            <div class="rule" aria-hidden="true"></div>
+            </li>
+        {% endfor %}
+        </ul>
+    {% endif %}
+
+    <h3>Later</h3>
+    {% if not later %}
+        <div class="muted">No events</div>
+    {% else %}
+        <ul class="calendar-list">
+        {% for item in later %}
+            <li class="line">
+            <h4>
+                <span class="time">{{ item.start|date:"D j/n/y H:i" }} - {{ item.end|date:"H:i" }}:</span>
+                <span class="meta">
+                <span class="title">{{ item.title }}</span>
+                </span>
+            </h4>
+            <div class="rule" aria-hidden="true"></div>
+            </li>
+        {% endfor %}
+        </ul>
+    {% endif %}
+    </div>
+</section>
+{% endwith %}

@@ -1,0 +1,47 @@
+{% load svg %}
+{% load weather_svg %}
+{% load util %}
+{% load static %}
+{% with updated_at=weather.updated_at days=weather.days %}
+
+<section class="card weather" aria-label="weather">
+    <header class="section-header">
+        <h2><span class="icon">{% svg "sun.svg" %}</span> Weather</h2>
+        <small>Updated: {{ updated_at|longdate }}</small>
+    </header>
+    <div class="weather-cards">
+        {% for day in weather.days %}
+        <article class="weather-card">
+            <div class="wc-title">{{ day.label }}</div>
+            <div class="wc-card-container">
+                <div class="wc-icon">
+                    {% weather_svg day.detail.icon "MEDIUM" %}
+                </div>
+                 <div class="wc-rain">
+                    <p>
+                        <span class="icon icon-xsmall icon-blue">{%svg "droplet.svg" %}</span>
+                        <span>{{day.percipitation_probability_pct}}%</span>
+                    </p>
+                </div>
+                <div class="wc-wind">
+                    <p><span class="icon icon-xsmall icon-orange">{%svg "windsock.svg" %}</span>&nbsp;<span class="wc-wind-dir">{{day.wind_dir_letters}}</span></p>
+                    <p><span class="wc-wind-bft">{{day.wind_speed_bft}}</span>&nbsp;Bft</p>
+                </div>
+                <div class="wc-temp wc-avg-min-max">
+                    <div class="avg">{{day.temp_day}}°</div>
+                    <div>
+                        <div class="max">{{day.temp_max}}°</div>
+                        <div class="min">{{day.temp_min}}°</div>
+                    </div>
+                </div>
+                <div class="wc-feel">
+                    <div class="wc-feels-like">Feel:</div>
+                    <div class="wc-feels-avg">{{day.feels_day}}°</div>
+                </div>
+            </div>
+        <div class="wc-summary">{{ day.detail.description }}, {{day.wind_descr}}</div>
+        </article>
+        {% endfor %}
+    </div>
+</section>
+{% endwith %}

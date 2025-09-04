@@ -1,0 +1,29 @@
+{% load svg %}
+{% load util %}
+{% with hostname=header.hostname generated_at=header.generated_at alerts=header.alerts %}
+<section class="card header" aria-label="header">
+    <header class="section-header">
+        <h2><span class="icon">{% svg "home.svg" %}</span> Dashboard - Fabiolapark 23 - Raspberry pi home server</h2>
+        <small>Generated {{ generated_at|date:"H:i" }}</small>
+    </header>
+
+    <div class="alerts">
+        {% if alerts %}
+        <span class="alert-label">Alerts:</span>
+        
+        {% for a in alerts %}
+        <div class="alert {{ a.level|default:'info' }}">
+            {% include "dashboard/partials/alert-icon.html" with level=a.level %}
+            <span>{{ a.message }}</span>
+        </div>
+        {% endfor %}
+
+        {% else %}
+        <span class="alert-label">No alerts or messages</span>
+        {% endif %}
+
+    </div>
+
+</section>
+
+{% endwith %}

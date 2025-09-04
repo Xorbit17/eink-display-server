@@ -1,0 +1,10 @@
+{% load svg %}
+{% if level == "info" %}
+<span class="icon small icon-blue">{% svg "svg/tabler/info-circle.svg" %}</span>
+{% endif %}
+{% if level == "warning" %}
+<span class="icon small icon-yellow">{% svg "svg/tabler/alert-triangle.svg" %}</span>
+{% endif %}
+{% if level == "error" %}
+<span class="icon small icon-red">{% svg "svg/tabler/alert-circle.svg" %}</span>
+{% endif %}

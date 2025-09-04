@@ -1,0 +1,34 @@
+{% load static %}
+{% load svg %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <title>Home Dashboard</title>
+    <meta name="viewport" content="width=1200, initial-scale=1" />
+    <link rel="stylesheet" href="{% static 'css/dashboard.css' %}" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.5.0/chart.umd.min.js" integrity="sha512-Y51n9mtKTVBh3Jbx5pZSJNDDMyY+yGe77DGtBPzRlgsf/YLCh13kSZ3JmfHGzYFCmOndraf0sQgfM654b7dJ3w==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    {{ stats.memory|json_script:"memory-graph-data" }}
+    {{ stats.cpu|json_script:"cpu-graph-data" }}
+    {{ stats.network|json_script:"network-graph-data" }}
+    {{ disks|json_script:"disks-graph-data" }}
+</head>
+<body>
+    <div class="dashboard-container">
+        <main class="grid">
+            {% if header %}{% include "dashboard/partials/header.html" with header=header %}{% endif %}
+            {% if weather %}{% include "dashboard/partials/weather.html" with weather=weather %}{% endif %}
+            {% if disks %}{% include "dashboard/partials/disks.html" with disks=disks %}{% endif %}
+            {% if stats.memory %}{% include "dashboard/partials/stat_graph.html" with stats=stats.memory %}{% endif %}
+            {% if stats.cpu %}{% include "dashboard/partials/stat_graph.html" with stats=stats.cpu %}{% endif %}
+            {% if stats.network %}{% include "dashboard/partials/stat_graph.html" with stats=stats.network %}{% endif %}
+            {% comment %} {% include "dashboard/partials/transmission.html" %} {% endcomment %}
+            {% if docker %}{% include "dashboard/partials/docker.html" with docker=docker%}{% endif %}
+            {% if calendar %}{% include "dashboard/partials/calendar.html" with celandar=calendar%}{% endif %}
+            
+        </main>
+    </div>
+    <script src="{% static 'js/dashboard.js' %}"></script>
+</body>
+
+</html>

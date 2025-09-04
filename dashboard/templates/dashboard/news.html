@@ -1,0 +1,154 @@
+{% load static %}
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <title>Dennis Dagblad</title>
+    <link rel="stylesheet" href="{% static 'css/eink-news.css' %}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400..800;1,400..800&display=swap"
+        rel="stylesheet">
+</head>
+
+<body>
+    <main class="page">
+        <!-- NAMEPLATE -->
+        <header class="nameplate flex-nameplate">
+            <div class="title-left">
+                <p>Jouw AI gegenereerd dagblad</p>
+                <p>Elke dag opnieuw.</p>
+            </div>
+            <div class="title-middle">
+                <h1>Van Eecke Nieuws</h1>
+            </div>
+            <div class="title-right">
+                <p>Editie 10, Gegenereerd om 0:15</p>
+                <p>21 Augustus 2025</p>
+                <p>OpenAI ChatGPT 5.0</p>
+            </div>
+        </header>
+
+        <!-- LEAD STORY -->
+        <article class="panel lead drop" lang="nl">
+            <h2>Slurpvis bestaat echt</h2>
+            <div class="article">
+                <div class="headline-image">
+                    <img class="img-fluid" src="{% static 'img/20250821/slurpvis.png' %}">
+                </div>
+                <p>
+                    Piet is er nog steeds niet goed van.
+                    Het was gebeurd nog voor hij het goed en wel door had.
+                    Wat een leuke familieuitstap had moeten worden is ontaard in een drama.
+                    Piet Uyttebroek was met zijn gezin een uitstap aan het maken in de Blaarmeersen te Gent toen het volledig mis ging.
+                </p>
+                <p>
+                    Het traumatische incident vond plaats woensdag.
+                    Een man van middelbare leeftijd is het slachtoffer geworden van een slurpicident.
+                    Zonder lichamelijk letsel misschien maar wel met aanzienlijke sociale gevolgen.
+                </p>
+            </div>
+        </article>
+
+        <!-- WEATHER RAIL -->
+        <aside class="panel weather" lang="nl">
+            <h2>Weer &amp; Weerpraat</h2>
+
+            <!-- compact row of cards -->
+            <div class="weather-cards cards">
+                <div class="card">
+                    <div class="icon-weather img-fluid" aria-hidden="true">
+                        <img src="{% static 'svg/weather-bas/clear-day.svg' %}" alt="">
+                    </div>
+                    <div class="label">Vandaag</div>
+                    <div class="temp">21°</div>
+                    <div class="meta">Wisselend bewolkt</div>
+                </div>
+
+                <div class="card">
+                    <div class="icon-weather img-fluid" aria-hidden="true">
+                        <img src="{% static 'svg/weather-bas/overcast-rain.svg' %}" alt="">
+                    </div>
+                    <div class="label">Vanavond</div>
+                    <div class="temp">14°</div>
+                    <div class="meta">Buien uit het westen</div>
+                </div>
+
+                <div class="card">
+                    <div class="icon-weather img-fluid" aria-hidden="true">
+                        <img src="{% static 'svg/weather-bas/cloudy.svg' %}" alt="">
+                    </div>
+                    <div class="label">Morgen</div>
+                    <div class="temp">19°</div>
+                    <div class="meta">Grijs maar zacht</div>
+                </div>
+
+                <div class="card">
+                    <div class="icon-weather img-fluid" aria-hidden="true">
+                        <img src="{% static 'svg/weather-bas/wind.svg' %}" alt="">
+                    </div>
+                    <div class="label">Wind</div>
+                    <div class="temp">ZW 4 Bft</div>
+                    <div class="meta">Vlagen tot 50 km/u</div>
+                </div>
+            </div>
+            <h3>Weerpraat</h3>
+            <p class="article" lang="nl">
+                Het regent overal behalve op de plaatsen waar het niet regent. Tussen
+                de druppels door vallen er zonnige gaten die mettertijd dichtgroeien.
+                Paraplu mee, maar doe alsof hij decor is; dan blijft het meestal droog.
+            </p>
+        </aside>
+
+        <!-- COLUMNS -->
+        <section class="panel colA" lang="nl">
+            <h2>Agenda</h2>
+            <ul class="briefs">
+                <li><strong>10:00</strong> — <em>Breaking:</em> Dennis heeft een
+                    sollicitatiegesprek. Strijk het hemd, vergeet de oplader niet.</li>
+                <li><strong>14:30</strong> — Call met <em>Pi-Home</em> werkgroep:
+                    “DNS vloeken, SSL zegeningen.”</li>
+            </ul>
+        </section>
+
+        <section class="panel colB" lang="nl">
+            <h2>Techniek</h2>
+            <div class="article">
+                <p>
+                    Nieuwe build van het dashboard rolt uit zonder scrollen en met
+                    hyphenatie. Kolommen vullen nu automatisch tot aan de streep;
+                    overloop wordt beleefd afgesneden en naar de volgende kolom gestuurd.
+                </p>
+                <p>
+                    De letter is EB Garamond, een klassieker met zachte schreven die op
+                    e-ink uitzonderlijk rustig oogt. De regels zijn dikker dan op papier,
+                    want spookbeelden verdienen geen podium.
+                </p>
+            </div>
+        </section>
+
+        <section class="panel colC" lang="nl">
+            <h2>Nieuws</h2>
+            <ul class="briefs">
+                <li><strong>VRT NWS</strong> — Onderzoekers vinden nog een reden om
+                    een regenjas te dragen: het regent.</li>
+                <li><strong>Tweakers</strong> — “Raspberry Pi blijft te klein voor
+                    zijn ambities, maar dat is precies de charme.”</li>
+                <li><strong>Slashdot</strong> — Anonieme bron zweert dat tabs beter
+                    zijn dan spaties. Redactie: “We erkennen de controverse.”</li>
+            </ul>
+        </section>
+
+        <!-- TICKER -->
+        <div class="ticker" aria-label="laatste meldingen">
+            Laatste: Dashboard bouwt zonder waarschuwingen · Weer: opklaringen na
+            buien · Agenda: 10:00 interview · Nieuws: nieuwe release-notes
+            vergeten, features onthouden
+        </div>
+    </main>
+
+
+</body>
+
+</html>

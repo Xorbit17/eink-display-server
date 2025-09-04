@@ -1,0 +1,42 @@
+{% load static %}
+{% load svg %}
+{% load util %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <title>Home Dashboard</title>
+    <meta name="viewport" content="width=1200, initial-scale=1" />
+    <link rel="stylesheet" href="{% static 'css/bootstrap.css' %}" />
+    <style>
+        .splash > main {
+            background-image: url("{% static 'img/bg_3.png' %}");
+            background-size: cover;
+            background-position: center;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="bootstrap-container splash">
+        <main style="">
+            <div class="card">
+                <header class="section-header center">
+                    <h2><span class="icon">{% svg "photo-cog.svg" %}</span> E-ink display client connected</h2>
+                    <small>Updated: {{ updated_at|longdate }}</small>
+                </header>
+                <ul class="bootinfo-list">
+                    {% for item in bootinfo %}
+                        <li class="line">
+                            <span class="key">{{ item.key }}:</span>
+                            <span class="value">{{ item.value }}</span>
+                        </li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </main>
+    </div>
+</body>
+
+</html>

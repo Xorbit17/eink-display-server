@@ -1,0 +1,210 @@
+:root {
+    /*E-ink optimised*/
+    --red: rgb(156, 72, 75);
+    --green: rgb(58, 91, 70);
+    --blue: rgb(61, 59, 94);
+    --yellow: rgb(208, 190, 71);
+    --orange: rgb(185, 118, 110);
+    --purple: rgb(109, 66, 85);
+    --black: rgb(0, 0, 0);
+    --white: rgb(255, 255, 255);
+    --dark-grey: rgb(81, 82, 83);
+    --grey: rgb(161, 164, 165);
+    --very-light-grey: rgb(242, 242, 242);
+    --light-grey: rgb(208, 210, 210);
+    --light-blue: rgb(158, 157, 175);
+
+    --accent: var(--blue);
+    --accent-bg: var(--ligt-blue);
+
+    --bg: var(--very-light-grey);
+    /* very light grey, keep as-is */
+    --bg-card: var(--white);
+    --border: var(--black);
+    --border-medium: var(--dark-grey);
+    --border-light: var(--grey);
+
+    --screen-width: 1200px;
+    --screen-height: 1600px;
+    --unit-height: calc(100vh / 16);
+    --half-width: calc(var(--screen-width) /2);
+}
+
+/* Typography */
+html,
+body {
+    background: var(--white);
+    color: var(--text);
+    font-size: 12pt;
+    line-height: 1.35;
+    margin: 0;
+    padding: 0;
+
+    /* E-ink readability tweaks */
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+    font-family: system-ui, -apple-system, "Segoe UI", "DejaVu Sans", "Liberation Sans", Arial, sans-serif;
+}
+
+.bootstrap-container {
+    width: var(--screen-width);
+    height: var(--screen-height);
+    margin: 0 auto;
+    background: var(--bg, #ffffff);
+    overflow: hidden;
+    position: relative;
+}
+
+.splash > main {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-around;
+    gap: 8px;
+}
+
+.card {
+    background: var(--bg-card);
+    padding: 8px 10px;
+    border-radius: 12px;
+    box-shadow: 5px 5px 0px var(--light-grey);
+    box-sizing: border-box;
+    max-width: 75%;
+    margin: auto;
+}
+
+.title {
+    font-weight: 700;
+    font-size: 1.15rem;
+    display: inline-flex;
+    gap: 6px;
+    align-items: center;
+}
+
+.subtitle {
+    font-weight: 700;
+    margin-bottom: 2px;
+    font-size: larger;
+}
+
+.meta {
+    display: flex;
+    gap: 10px;
+    margin-top: 4px;
+    font-size: 0.95rem;
+}
+
+.badge {
+    padding: 2px 6px;
+    font-weight: 700;
+    border-radius: 6px;
+}
+
+.badge-accent {
+    color: var(--accent);
+    background: var(--accent-bg);
+}
+
+/* Alerts strip */
+.alerts {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 8px;
+    align-items: center;
+}
+
+.alert-label {
+    padding: 4px 6px;
+}
+
+.alert {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    border-radius: 6px;
+    padding: 4px 6px;
+    font-weight: 700;
+}
+
+.alert.info {
+    background: var(--blue-10);
+}
+
+.alert.warning {
+    background: var(--yellow-10);
+}
+
+.alert.danger {
+    background: var(--red-10);
+}
+
+.alert.good {
+    background: var(--green-10);
+}
+
+.section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 8px;
+    border-bottom: 2px solid var(--border-medium);
+    padding-bottom: 4px;
+}
+
+.scection-header.center {
+    text-align: center;
+}
+
+.section-header h2 {
+    margin: 0;
+    font-size: 1.05rem;
+    display: inline-flex;
+    gap: 6px;
+    align-items: center;
+}
+
+ul.bootinfo-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: grid;
+    grid-template-columns: max-content 1fr;
+}
+.bootinfo-list > li {
+    display:contents;
+}
+
+.bootinfo-list .key {
+    grid-column: 1;
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+    padding-right:8px;
+    align-self: baseline;
+    font-weight: 700;
+}
+
+.bootinfo-list .value {
+    grid-column: 2;
+    min-width: 0;
+    align-self: baseline;
+}
+
+.kv {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px 12px;
+}
+
+.kv dt {
+    font-weight: 700;
+}
+
+.kv dd {
+    margin: 0;
+}
+

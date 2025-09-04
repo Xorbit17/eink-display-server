@@ -1,0 +1,1 @@
+# Newspaper editor context

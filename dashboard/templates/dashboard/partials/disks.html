@@ -1,0 +1,27 @@
+{% load svg %}
+{% with updated_at=disks.updated_at %}
+<section class="card disk" aria-label="disks">
+    <header class="section-header">
+        <h2><span class="icon">{% svg "database.svg" %}</span> Disks</h2>
+        <small>Updated: {{ updated_at|date:"H:i" }}</small>
+    </header>
+
+    <div class="disk-list">
+        {% for d in disks.disks %}
+        <div class="disk-item">
+            <canvas
+                class="disk-canvas"
+                id="disk-canvas-{{ d.id }}"
+            >
+            </canvas>
+            <div class="disk-info">
+                <p class="subtitle">{{ d.disk_name }}</p>
+                <p><span class="disk-size-label">Used: </span>{{d.used}}</p>
+                <p><span class="disk-size-label">Total: </span>{{d.total}}</span></p>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</section>
+{% endwith %}
+

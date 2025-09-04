@@ -1,0 +1,188 @@
+:root {
+  --rule: #000;
+  /* strong rules for e-ink */
+  --ink: #000;
+  --ink-bg: #FFF;
+  --muted: #666;
+  --accent: #c00;
+  /* optional red accent, use rarely */
+}
+
+html,
+body {
+  margin: 0;
+  height: 100%;
+  background: var(--ink-bg);
+  color: var(--ink);
+}
+
+body {
+  font-family: "EB Garamond", Georgia, serif;
+  font-size: 18px;
+  line-height: 1.35;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+* {
+  animation: none !important;
+  transition: none !important;
+}
+
+.page {
+  width: 1200px;
+  height: 1600px;
+  /* exact e-ink portrait */
+  margin: 0 auto;
+  padding: 40px 40px 20px;
+  display: grid;
+  gap: 10px;
+  grid-template-columns: repeat(6, 1fr);
+  grid-template-rows: auto 1fr 1fr auto;
+  grid-template-areas:
+    "nameplate nameplate nameplate nameplate nameplate nameplate"
+    "lead lead lead lead weather weather"
+    "colA colA colB colB colC colC"
+    "ticker ticker ticker ticker ticker ticker";            
+  background-clip: content-box;
+}
+
+/* Nameplate */
+.nameplate {
+  grid-area: nameplate;
+  padding-bottom: 10px;
+  border-bottom: solid var(--rule) 2px;
+  text-align: center;
+}
+
+.flex-nameplate { 
+  display:flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.nameplate h1 {
+  font-variant-caps: small-caps;
+  letter-spacing: .06em;
+  margin: 0;
+  font-size: 60px;
+}
+
+.nameplate p {
+  margin:0;
+  color: var(--muted);
+}
+
+.nameplate .title-left {
+  text-align: left;
+  flex: 0 1 25%;
+}
+
+.nameplate .title-center {
+  text-align: center;
+  flex: 1 0 50%;
+}
+
+.nameplate .title-right {
+  text-align: right;
+  flex: 0 1 25%;
+}
+
+.nameplate .dateline {
+  color: var(--muted);
+}
+
+.panel {
+  padding: 12px;
+}
+
+.lead {
+  grid-area: lead;
+}
+
+.weather {
+  grid-area: weather;
+}
+
+.colA {
+  grid-area: colA;
+}
+
+.colB {
+  grid-area: colB;
+}
+
+.colC {
+  grid-area: colC;
+}
+
+.ticker {
+  grid-area: ticker;
+  padding: 6px 8px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  background: var(--ink-bg);
+}
+
+/* Headlines */
+h2 {
+  margin: 0 0 6px;
+  font-weight: 700;
+}
+
+h3 {
+  margin: 12px 0 6px;
+  font-weight: 700;
+}
+
+/* Body copy */
+.article {
+  text-align: justify;
+  hyphens: auto;
+}
+
+.article[lang="nl"] {
+  hyphens: auto;
+}
+
+.drop p:first-of-type::first-letter {
+  float: left;
+  font-size: 3.2em;
+  line-height: .9;
+  padding: 0 .08em 0 0;
+  /* fallback drop cap */
+}
+
+/* Lists of briefs */
+.briefs {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.briefs li {
+  border-top: 2px solid var(--rule);
+  padding: 6px 0;
+}
+
+/* Icons */
+.icon-weather {
+  width: 4rem;
+  height: 4rem;
+  stroke: currentColor;
+}
+
+.img-fluid { max-width: 100%; height: auto; }
+.headline-image {
+  max-width: 100%;
+}
+
+/* No scrolling on the screenshot page */
+html,
+body {
+  overflow: hidden;
+}

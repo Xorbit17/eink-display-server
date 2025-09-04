@@ -1,0 +1,14 @@
+django
+gunicorn
+djangorestframework
+httpx
+python-dateutil
+croniter
+openai
+pillow
+pillow-heif
+pydantic
+psutil
+docker
+requests
+ics

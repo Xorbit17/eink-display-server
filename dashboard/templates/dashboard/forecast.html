@@ -1,0 +1,33 @@
+<!doctype html>
+<html>
+  <head><meta charset="utf-8"><title>Forecast</title></head>
+  <body>
+    <h1>Weather forecast</h1>
+    <table>
+      <thead>
+        <tr>
+          <th>When</th>
+          <th>Location</th>
+          <th>Icon</th>
+          <th>Temp °C</th>
+          <th>Precip %</th>
+          <th>Wind (Bft)</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for f in forecasts %}
+          <tr>
+            <td>{{ f.at|date:"Y-m-d H:i" }}</td>
+            <td>{{ f.location }}</td>
+            <td>{{ f.get_icon_display }}</td>
+            <td>{{ f.temperature_c }}</td>
+            <td>{{ f.precip_prob }}</td>
+            <td>{{ f.wind_bft }}</td>
+          </tr>
+        {% empty %}
+          <tr><td colspan="6">No forecasts yet.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </body>
+</html>

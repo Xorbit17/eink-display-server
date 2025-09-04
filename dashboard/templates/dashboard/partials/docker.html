@@ -1,0 +1,37 @@
+
+{% load svg %}
+{% with updated_at=docker.updated_at containers=docker.containers total_mem=docker.total_mem %}
+
+<section class="card docker" aria-label="docker">
+    <header class="section-header">
+        <h2><span class="icon">{% svg "brand-docker.svg" %}</span> Docker</h2>
+        <small>Updated: {{ updated_at|date:"H:i" }}</small>
+    </header>
+
+    <table class="tbl">
+        <thead>
+            <tr>
+                <th>Container</th>
+                <th>State</th>
+                <th>Health</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for c in containers %}
+            <tr>
+                <td>{{ c.name }}</td>
+                <td>
+                    {% include "dashboard/partials/health-indicator.html"  with status=c.status%}
+                    
+                </td>
+                <td>
+                    {% include "dashboard/partials/health-indicator.html"  with status=c.health%}
+
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</section>
+
+{% endwith %}

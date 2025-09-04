@@ -1,0 +1,24 @@
+{% load svg %}
+{% with stat_id_and_grid=stats.stat_id_and_grid stat_title=stats.stat_title stat_icon_path=stats.stat_icon_path updated_at=stats.updated_at data=stats.graph_data %}
+
+<section class="card {{stat_id_and_grid}}" aria-label="{{stat_id_and_grid}}">
+    <header class="section-header">
+        <h2><span class="icon">{% svg stat_icon_path %}</span> {{stat_title}}</h2>
+        <small>Updated: {{ updated_at|date:"H:i" }}</small>
+    </header>
+
+    <div class="stat-graph-list">
+        {% for d in data %}
+        <div class="stat-graph-item">
+            <canvas
+                id="stat-graph-canvas-{{ stat_id_and_grid }}-{{d.id}}"
+                class="stat-graph-canvas"
+                height="192"
+            ></canvas>
+        </div>
+
+        {% endfor %}
+    </div>
+</section>
+
+{% endwith %}
