@@ -1,4 +1,4 @@
-from dashboard.jobs.image_processing_declaration import (
+from dashboard.image_processing_declaration import (
     NOT_SUITED,
     BAD,
     PASSABLE,
@@ -14,7 +14,6 @@ from dashboard.jobs.image_processing_declaration import (
     ART,
     OBJECT,
     OTHER,
-    
 )
 from typing import Dict
 from django.utils import timezone

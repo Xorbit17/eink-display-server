@@ -4,7 +4,7 @@ from dashboard.constants import (
     IMAGE_EXTENSIONS,
     MIME_BY_EXT,
 )
-from dashboard.jobs.image_processing_declaration import (
+from dashboard.image_processing_declaration import (
     ContentTypeClassification,
     QualityClassification,
     RenderDecision,

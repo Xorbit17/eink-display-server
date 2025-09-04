@@ -1,4 +1,4 @@
-from dashboard.jobs.image_processing_declaration import RenderDecision, KEEP_PHOTO, ALL_ART_STYLES, ArtStyle
+from dashboard.image_processing_declaration import RenderDecision, KEEP_PHOTO, ALL_ART_STYLES, ArtStyle
 from pathlib import Path
 from dashboard.jobs.job_registry import register
 from dashboard.models.job import Job

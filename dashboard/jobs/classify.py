@@ -30,7 +30,6 @@ def find_files() -> set[str]:
             files.add(full)
     return files
 
-
 def is_portrait(path: str) -> bool:
     with Image.open(path) as img:
         w, h = img.size

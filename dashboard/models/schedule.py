@@ -9,7 +9,7 @@ from django.core.exceptions import ValidationError
 from django.db import models
 from django.utils import timezone
 from zoneinfo import ZoneInfo
-from dashboard.constants import MODE_CHOICES, PHOTO_MODE, WEEKDAY_CHOICES, ModeKind
+from dashboard.constants import Mode, Weekday
 from django.contrib.auth.models import User
 
 MIDNIGHT = time(0,0,0)
@@ -18,7 +18,7 @@ def _minutes_since_midnight(t: time) -> int:
     return t.hour * 60 + t.minute
 
 def _end_minutes(end_t: time) -> int:
-    # Edge case. If end_t is midnight and we are looing for the end time this means
+    # Edge case. If end_t is midnight and we are looking for the end time this means
     # the end of the day, not the beginning
     mins = _minutes_since_midnight(end_t)
     return 24 * 60 if mins == 0 else mins
@@ -27,7 +27,7 @@ def _end_minutes(end_t: time) -> int:
 class _Window:
     start_min: int
     end_min: int
-    mode: ModeKind
+    mode: Mode
 
 class Display(models.Model):
     """
@@ -42,8 +42,8 @@ class Display(models.Model):
     hardware_id = models.CharField(max_length=255, unique=True) # Example "6a:6b:9b:a1:cb:38"
     human_readable_id= models.CharField(max_length=16, unique=True)
     timezone = models.CharField(max_length=64, default="Europe/Brussels")
-    default_mode = models.CharField(max_length=16, choices=MODE_CHOICES, default=PHOTO_MODE)
-    override_mode = models.CharField(max_length=16, choices=MODE_CHOICES, null=True, default=None)
+    default_mode = models.CharField(max_length=16, choices=Mode.choices(), default=Mode.PHOTO)
+    override_mode = models.CharField(max_length=16, choices=Mode.choices(), null=True, default=None)
     last_seen = models.DateTimeField(null=True) # NULL means display has never connected
     x_res = models.PositiveIntegerField()
     y_res = models.PositiveIntegerField()
@@ -70,10 +70,10 @@ class Display(models.Model):
 
 class WeeklyRule(models.Model):
     display = models.ForeignKey(Display, on_delete=models.CASCADE, related_name="weekly_rules")
-    weekday = models.IntegerField(choices=WEEKDAY_CHOICES)  # 0=Mon .. 6=Sun
+    weekday = models.IntegerField(choices=Weekday.choices())  # 0=Mon .. 6=Sun
     start_time = models.TimeField(help_text="Inclusive local start")
     end_time = models.TimeField(help_text="Exclusive local end; use 00:00 for 'until midnight'")
-    mode = models.CharField(max_length=16, choices=MODE_CHOICES, default=PHOTO_MODE)
+    mode = models.CharField(max_length=16, choices=Mode.choices(), default=Mode.PHOTO)
     active = models.BooleanField(default=True)
 
     created_at = models.DateTimeField(auto_now_add=True)
@@ -119,11 +119,11 @@ class WeeklyRule(models.Model):
         for r in rules:
             s = _minutes_since_midnight(r.start_time)
             e = _end_minutes(r.end_time)
-            windows.append(_Window(start_min=s, end_min=e, mode=cast(ModeKind,r.mode)))
+            windows.append(_Window(start_min=s, end_min=e, mode=cast(Mode,r.mode)))
         return windows
 
     @staticmethod
-    def resolve_mode(display: Display, now: Optional[datetime] = None) -> ModeKind:
+    def resolve_mode(display: Display, now: Optional[datetime] = None) -> Mode:
         display.clear_expired_override()
 
         local_now = timezone.localtime() if now is None else timezone.make_aware(now)
@@ -131,7 +131,7 @@ class WeeklyRule(models.Model):
         if display.override_mode and display.override_expires_at:
 
             if now < display.override_expires_at:
-                return cast(ModeKind,display.override_mode)
+                return cast(Mode,display.override_mode)
         # Normal case: schedule
         weekday = local_now.weekday()
         minutes = local_now.hour * 60 + local_now.minute
@@ -142,7 +142,7 @@ class WeeklyRule(models.Model):
                 return w.mode
 
         # If nothing matched (e.g., schedule gaps or no schedule), fall back to default
-        return cast(ModeKind,display.default_mode)
+        return cast(Mode,display.default_mode)
 
     @staticmethod
     def next_boundary_for_display(display: Display, now_local: Optional[datetime] = None) -> Optional[datetime]:

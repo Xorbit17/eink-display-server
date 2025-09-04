@@ -1,8 +1,3 @@
-
-
-from django.utils import timezone
-
-
 from dashboard.services.scoring import calculate_final_score
 from dashboard.models.photos import Variant
 from typing import Iterable, List, Tuple
@@ -40,7 +35,6 @@ def get_variant():
         raise Exception("No images available.")
     
 
-    now = timezone.now()
     pairs: List[Tuple[Variant, float]] = []
     for v in qs.iterator():
         # v.score is your persisted static score

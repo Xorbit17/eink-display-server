@@ -1,6 +1,7 @@
 from zoneinfo import ZoneInfo
-from typing import Literal, Dict, TypeAlias
+from typing import Dict
 from pathlib import Path
+from enum import Enum, IntEnum
 
 def parse_env_file(path: str | Path) -> Dict[str, str]:
     env: Dict[str, str] = {}
@@ -24,12 +25,10 @@ def parse_env_file(path: str | Path) -> Dict[str, str]:
 
 
 LOCAL_TZ = ZoneInfo("Europe/Brussels")
-APP_DIR = Path(__file__).resolve().parents[0]  # app; a.k.a. the current django app
+APP_DIR = Path(__file__).resolve().parents[0]  # app; a.k.a. the current django app 'dashboard'
 PROJECT_DIR = APP_DIR.parents[0]  # server; a.k.a the django root
-PI_DIR = PROJECT_DIR.parents[
-    0
-]  # pi_home; a.k.a root of all sources of projects running on this pi
-ENV_PATH = PI_DIR / ".env.server"
+
+ENV_PATH = PROJECT_DIR / ".env.server"
 SECRETS = parse_env_file(ENV_PATH)
 
 IMAGE_DIR = Path(SECRETS["IMAGE_DIR"])
@@ -41,111 +40,79 @@ OPENAI_SQUARE_SIZE= "1024x1024"
 OPENAI_LANDSCAPE_SIZE= "1536x1024"
 IMAGE_ART_GENERATION_MODEL="gpt-5"
 
-NEWS_MODE = "news"
-PHOTO_MODE = "photo"
-DASHBOARD_MODE = "dashboard"
+class LabeledEnum(str, Enum):
+    """
+    An enum that has a label for each member, and can generate
+    a list of (value, label) pairs for use in Django choices.
+    """
+    label: str
 
-MODE_CHOICES = [
-    (NEWS_MODE, "Newspaper"),
-    (PHOTO_MODE, "Photo"),
-    (DASHBOARD_MODE, 'Dashboard')
-]
+    def __new__(cls, value, label):
+        obj = str.__new__(cls, value)
+        obj._value_ = value
+        obj.label = label
+        return obj
 
-ModeKind: TypeAlias = Literal[
-    "NEWS_MODE",
-    "PHOTO_MODE",
-    "DASHBOARD_MODE"
-]
+    @classmethod
+    def choices(cls):
+        return [(key.value, key.label) for key in cls]
 
-WEEKDAY_CHOICES = [
-    (0, "Mon"),
-    (1, "Tue"),
-    (2, "Wed"),
-    (3, "Thu"),
-    (4, "Fri"),
-    (5, "Sat"),
-    (6, "Sun"),
-]
+class Mode(LabeledEnum):
+    NEWS = ("news", "Newspaper")
+    PHOTO = ("photo", "Photo")
+    DASHBOARD = ("dashboard", "Dashboard")
 
-NEWS_KIND = "news"
-PHOTO_KIND = "photo"
+class Weekday(IntEnum):
+    MON = 0
+    TUE = 1
+    WED = 2
+    THU = 3
+    FRI = 4
+    SAT = 5
+    SUN = 6
 
-ASSET_CHOICES = [(NEWS_KIND, "Newspaper"), (PHOTO_KIND, "Photo")]
+    @classmethod
+    def choices(cls):
+        # Returns a list of (value, label) pairs for use in Django choices.
+        # e.g. [(0, 'Mon'), (1, 'Tue'), ...]
+        return [(day.value, day.name.title()) for day in cls]
 
-DEBUG = "DEBUG"
-INFO = "INFO"
-WARN = "WARN"
-ERROR = "ERROR"
 
-LOG_LEVEL_CHOICES = [
-    (DEBUG, "Debug"),
-    (INFO, "Info"),
-    (WARN, "Warning"),
-    (ERROR, "Error"),
-]
+class AssetKind(LabeledEnum):
+    NEWS = ("news", "Newspaper")
+    PHOTO = ("photo", "Photo")
 
-CALENDAR = "CALENDAR"
-RSS = "RSS"
-WEATHER = "WEATHER"
-PUSH = "PUSH"
-ART = "ART"
-NEWSPAPER = "NEWSPAPER"
-CLASSIFY = "CLASSIFY"
-MANUAL_TRIGGER = "MANUAL_TRIGGER"
-DASHBOARD = "DASHBOARD"
-DUMMY = "DUMMY"
+class LogLevel(LabeledEnum):
+    DEBUG = ("DEBUG", "Debug")
+    INFO = ("INFO", "Info")
+    WARN = ("WARN", "Warning")
+    ERROR = ("ERROR", "Error")
 
-JOB_KIND_CHOICES = [
-    (CALENDAR, "Get calendar"),
-    (RSS, "Get RSS"),
-    (WEATHER, "Get weather"),
-    (PUSH, "Push to displays"),
-    (ART, "Generate art"),
-    (NEWSPAPER, "Generate newspaper"),
-    (CLASSIFY, "Classify image"),
-    (MANUAL_TRIGGER, "Manually triggered"),
-    (DASHBOARD, "Generate dashboard"),
-    (DUMMY, "Dummy job to test the scheduler and the commands")
-]
+class JobKind(LabeledEnum):
+    CALENDAR = ("CALENDAR", "Get calendar")
+    RSS = ("RSS", "Get RSS")
+    WEATHER = ("WEATHER", "Get weather")
+    PUSH = ("PUSH", "Push to displays")
+    ART = ("ART", "Generate art")
+    NEWSPAPER = ("NEWSPAPER", "Generate newspaper")
+    CLASSIFY = ("CLASSIFY", "Classify image")
+    MANUAL_TRIGGER = ("MANUAL_TRIGGER", "Manually triggered")
+    DASHBOARD = ("DASHBOARD", "Generate dashboard")
+    DUMMY = ("DUMMY", "Dummy job to test the scheduler and the commands")
 
-JobKind: TypeAlias = Literal[
-    "CALENDAR",
-    "RSS",
-    "WEATHER",
-    "PUSH",
-    "ART",
-    "NEWSPAPER",
-    "CLASSIFY",
-    "MANUAL_TRIGGER",
-    "DUMMY",
-    "DASHBOARD",
-]
+class JobStatus(LabeledEnum):
+    RUNNING = ("RUNNING", "Running")
+    SUCCESS = ("SUCCESS", "Success")
+    SKIPPED = ("SKIPPED", "Skipped")
+    ERROR = ("ERROR", "Error")
+    QUEUED = ("QUEUED", "Queued")
 
-RUNNING = "RUNNING"
-SUCCESS = "SUCCESS"
-SKIPPED = "SKIPPED"
-ERROR = "ERROR"
-QUEUED = "QUEUED"
+class JobType(LabeledEnum):
+    CRON = ("CRON", "Triggered by chron")
+    MANUAL = ("MANUAL", "Triggered manually")
 
-JOB_STATUS_CHOICES = [
-    (RUNNING, "Running"),
-    (SUCCESS, "Success"),
-    (SKIPPED, "Skipped"),
-    (ERROR, "Error"),
-    (QUEUED, "Queued"),
-]
-
-JobStatus = Literal["RUNNING", "SUCCESS", "SKIPPED", "ERROR", "QUEUED"]
-
-CRON = "CRON"
-MANUAL = "MANUAL"
-
-JOB_TYPE_CHOICES = [
-    (CRON, "Triggered by chron"),
-    (MANUAL, "Triggered manually"),
-]
-
-JobType = Literal["CRON", "MANUAL"]
+# NOTE: The previous TypeAlias definitions for Pydantic have been removed.
+# Pydantic models can use these Enums directly for validation.
 
 IMAGE_EXTENSIONS = {".jpg", ".jpeg", ".png", ".gif", ".bmp", ".heic"}
 MIME_BY_EXT = {

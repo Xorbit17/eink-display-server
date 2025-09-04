@@ -6,4 +6,3 @@ from . import dummy_job
 from . import generate_dashboard
 from . import generate_variant
 from . import get_weather
-from . import image_processing_declaration

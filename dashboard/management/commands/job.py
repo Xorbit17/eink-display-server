@@ -1,12 +1,12 @@
 from django.core.management.base import BaseCommand, CommandError
-from dashboard.constants import JOB_KIND_CHOICES, JobKind
+from dashboard.constants import JobKind
 from dashboard.jobs.job_registry import test_job
 
 
 from typing import cast, Dict, Any
 import json
 
-VALID_CHOICES =  [t[0] for t in JOB_KIND_CHOICES]
+VALID_CHOICES = [member.value for member in JobKind]
 
 class Command(BaseCommand):
     help = "Runs a specific job. First arg is the job kind; named args are job-specific."
@@ -29,7 +29,7 @@ class Command(BaseCommand):
             "--params-json",
             type=str,
             default=None,
-            help='JSON dict of parameters. Example: --params-json \'{"source_image_id":1}\'',
+            help='JSON dict of parameters. Example: --params-json \'{\"source_image_id\":1}\'',
         )
 
     def handle(self, *args, **options):

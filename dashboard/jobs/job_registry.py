@@ -1,5 +1,5 @@
 from typing import Callable, Dict, Any, Tuple, Type
-from dashboard.constants import JobKind, RUNNING, MANUAL
+from dashboard.constants import JobKind, JobStatus, JobType
 from dashboard.models.job import Job, Execution
 from django.utils import timezone
 
@@ -39,14 +39,14 @@ def test_job(jobKind: JobKind, rethrow: bool = False, *, params: Dict[str,Any]):
     job = Job.objects.create(
         name="Manually triggered",
         kind=jobKind,
-        job_type = MANUAL,
+        job_type = JobType.MANUAL,
         enabled=True,
         params="",
     )
     execution = Execution.objects.create(
         job=job,
         started_at=timezone.now(),
-        status=RUNNING,
+        status=JobStatus.RUNNING,
         params=params or {},
     )
     logger = RunLogger(job, execution)
@@ -62,11 +62,11 @@ def test_job(jobKind: JobKind, rethrow: bool = False, *, params: Dict[str,Any]):
 
 @transaction.atomic
 def run_execution(execution: Execution):
-    if not execution.status == RUNNING:
+    if not execution.status == JobStatus.RUNNING:
         raise RuntimeError(f"Execution with id {execution.pk} does not have status set to running")
     
     job = cast(Job, execution.job)
-    Execution.objects.filter(pk=execution.pk, status=RUNNING).update(started_at=timezone.now())
+    Execution.objects.filter(pk=execution.pk, status=JobStatus.RUNNING).update(started_at=timezone.now())
     execution.refresh_from_db(fields=["status", "started_at"])
 
     logger = RunLogger(job, execution)

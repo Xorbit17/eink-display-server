@@ -125,6 +125,4 @@ class Command(BaseCommand):
                 updated += 1
                 self.stdout.write(self.style.WARNING(f"Updated CalendarSource: {obj.name}"))
 
-        
-
         self.stdout.write(self.style.SUCCESS(f"Seeding complete. Created: {created}, Updated: {updated}"))

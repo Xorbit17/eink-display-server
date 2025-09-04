@@ -7,7 +7,7 @@ import re
 from django.conf import settings
 from django.utils import timezone
 from datetime import time
-from dashboard.constants import PHOTO_MODE, DASHBOARD_MODE
+from dashboard.constants import Mode
 from django.db import transaction
 from typing import Tuple
 
@@ -49,35 +49,35 @@ def create_default_schedule(display: Display) -> None:
                 weekday=i, # Monday is 0, tuesday is 1 etc
                 start_time=MIDNIGHT,
                 end_time=BREAKFAST,
-                mode=PHOTO_MODE,
+                mode=Mode.PHOTO,
             )
             WeeklyRule.objects.create(
                 display=display,
                 weekday=i,
                 start_time=BREAKFAST,
                 end_time=MORNING,
-                mode=DASHBOARD_MODE,
+                mode=Mode.DASHBOARD,
             )
             WeeklyRule.objects.create(
                 display=display,
                 weekday=i,
                 start_time=MORNING,
                 end_time=NOON,
-                mode=PHOTO_MODE,
+                mode=Mode.PHOTO,
             )
             WeeklyRule.objects.create(
                 display=display,
                 weekday=i,
                 start_time=NOON,
                 end_time=AFTERNOON,
-                mode=DASHBOARD_MODE,
+                mode=Mode.DASHBOARD,
             )
             WeeklyRule.objects.create(
                 display=display,
                 weekday=i,
                 start_time=AFTERNOON,
                 end_time=MIDNIGHT,
-                mode=PHOTO_MODE,
+                mode=Mode.PHOTO,
             )
 
 

@@ -1,10 +1,9 @@
 from __future__ import annotations
 from dataclasses import dataclass
-from typing import List, Literal, Dict
+from typing import List, Literal
 import docker
 
 
-@dataclass
 @dataclass
 class ContainerHealth:
     id: str
@@ -23,7 +22,6 @@ def get_container_health() -> List[ContainerHealth]:
 
     for c in client.containers.list(all=True):
         state = c.attrs.get("State", {})
-        stats: Dict = c.stats(stream=False)
         containers.append(ContainerHealth(
             id=c.id,
             name=c.name,
