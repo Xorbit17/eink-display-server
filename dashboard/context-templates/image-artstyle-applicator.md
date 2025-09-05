@@ -16,11 +16,11 @@ Please make sure not to generate any of these qualities:
 * Extremely fine details in the range of 5 pixels or smaller
 * Extra limbs for humans or animals
 
-These are the specific instructions for type of subject {{subject_type}}:
+These are the specific instructions for type of content {{content_type}}:
 
 ---
 
-{{subject_type_instructions}}
+{{content_type_prompt}}
 
 ---
 
@@ -28,7 +28,7 @@ This are the specific instuctions for the art style {{art_style}}:
 
 ---
 
-{{artstyle_instructions}}
+{{artstyle_prompt}}
 
 ---
 

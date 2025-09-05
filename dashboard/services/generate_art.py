@@ -1,29 +1,45 @@
-from typing import Dict, Iterable, List, Sequence, Tuple, Optional, Union, Protocol, cast
+from typing import (
+    Dict,
+    Iterable,
+    List,
+    Sequence,
+    Tuple,
+    Optional,
+    Union,
+    Protocol,
+    cast,
+)
 from PIL import Image
 from pathlib import Path
-from django.template import Context, Template
+from django.template import Context
+from django.core.exceptions import ObjectDoesNotExist
+from dashboard.models.art import ContentType, Artstyle
 from dashboard.services.openai import openai_client
 from dashboard.services.image_processing import pil_to_base64, base64_to_pil
-from dashboard.image_processing_declaration import ART_STYLE_CHOICES, CONTENT_TYPE_MARKDOWN, CONTENT_TYPE_CLASSIFICATION_CHOICES, PipelineArgs, PipelineSteps, ArtStyle
+from dashboard.image_processing_declaration import PipelineArgs, PipelineSteps
 from typing import Any, Callable
 from dataclasses import dataclass, field
-from dashboard.services.classify_image import ImageClassification
 from io import BytesIO
 
-RGB = Tuple[int, int, int]
-ART_GENERATOR_PROMPT_TEMPLATE = Template(
-    (
-        Path(__file__).resolve().parent.parent
-        / "context_templates"
-        / "image-artstyle-applicator.md"
-    ).read_text(),
+from dashboard.services.openai_prompting import (
+    GenericImageClassification,
+    render_md_prompt,
 )
+
+RGB = Tuple[int, int, int]
+ART_GENERATOR_PROMPT_TEMPLATE = (
+    Path(__file__).resolve().parent.parent
+    / "context_templates"
+    / "image-artstyle-applicator.md"
+).read_text()
+
 
 class Logger(Protocol):
     def debug(self, msg, **ctx) -> None: ...
     def info(self, msg, **ctx) -> None: ...
     def warn(self, msg, **ctx) -> None: ...
     def error(self, msg, **ctx) -> None: ...
+
 
 class ConsoleLogger:
     def debug(self, msg: str, **ctx: Any) -> None:
@@ -38,12 +54,14 @@ class ConsoleLogger:
     def error(self, msg: str, **ctx: Any) -> None:
         print(f"[ERROR] {msg}", ctx if ctx else "")
 
+
 default_logger: Logger = ConsoleLogger()
+
 
 @dataclass
 class ImageProcessingContext:
-    classification: ImageClassification | None = None
-    art_style: ArtStyle = "KEEP_PHOTO"
+    artstyle: Artstyle
+    classification: GenericImageClassification | None = None
     pipeline: PipelineSteps = field(default_factory=list)
     pipeline_args: PipelineArgs = field(default_factory=list)
     current_arguments: Any = None
@@ -51,59 +69,34 @@ class ImageProcessingContext:
     logger: Logger = default_logger
 
 
-def get_art_generator_prompt(context: dict) -> str:
-    return ART_GENERATOR_PROMPT_TEMPLATE.render(Context(context))
-
-def get_art_instructions_prompt(markdown, *, context: ImageProcessingContext):
-    base_dir = Path(__file__).resolve().parent
-    md_path = base_dir / "context-templates" / "artstyles" / markdown
-    if (md_path.exists()):
-        return md_path.read_text()
-    art_style_readable = next(t[1] for t in ART_STYLE_CHOICES if t[0]==context.art_style)
-    return art_style_readable
-
-def get_content_type_instructions(*, context: ImageProcessingContext):
-    if not context.classification:
-        return RuntimeError("Classification not in context")
-    markdown = CONTENT_TYPE_MARKDOWN.get(context.classification.contentType)
-    if not markdown:
-        raise RuntimeError()
-    
-    base_dir = Path(__file__).resolve().parent.parent
-    md_path = base_dir / "context-templates" / "subject-types" / markdown
-    if (md_path.exists()):
-        return md_path.read_text()
-    content_type_readable = next(t[1] for t in CONTENT_TYPE_CLASSIFICATION_CHOICES if t[0]==context.classification.contentType)
-    return content_type_readable
-
 # Pipeline function
 def openai_process(
     image: Image.Image, markdown_filename, *, context: ImageProcessingContext
 ) -> Image.Image:
     if not context.classification:
         raise Exception("Context does not contain classification")
-    instructions = get_art_instructions_prompt(
-        markdown_filename, context=context
-    )
-    prompt = get_art_generator_prompt(
-        context={
-            "artstyle_instructions": instructions,
-            "aspect_ratio": "portrait",
-            "subject_type_instructions": get_content_type_instructions(context=context),
-            "subject_type": context.classification.contentType,
-            "art_style": context.art_style,
-        }
-    )
-
     has_alpha = image.mode in ("RGBA", "LA", "P") and (
         "A" in image.getbands() or "transparency" in image.info
     )
     if has_alpha:
-        fmt, mime, img_to_send = "PNG", "image/png", image
-    else:
-        fmt, mime, img_to_send = "JPEG", "image/jpeg", image.convert("RGB")
-
-    b64 = pil_to_base64(img_to_send, format=fmt)
+        raise Exception("Images with alpha are not supported")
+    try:
+        content_type = ContentType.objects.get(name=context.classification.contentType)
+    except ObjectDoesNotExist:
+        raise Exception(
+            f"Content type '{context.classification.contentType}' not found in database"
+        )
+    artstyle = context.artstyle
+    prompt_context = Context(
+        {
+            "content_type": content_type.name,
+            "content_type_prompt": content_type.generator_prompt,
+            "artstyle": artstyle.name,
+            "artstyle_prompt": artstyle.generator_prompt,
+        }
+    )
+    prompt = render_md_prompt(ART_GENERATOR_PROMPT_TEMPLATE, prompt_context)
+    b64 = pil_to_base64(image)
 
     # TODO error handling?
     response = openai_client.responses.create(
@@ -117,7 +110,7 @@ def openai_process(
                     {"type": "input_text", "text": prompt},
                     {
                         "type": "input_image",
-                        "image_url": f"data:{mime};base64,{b64}",
+                        "image_url": f"data:image/png;base64,{b64}",
                         "detail": "high",
                     },
                 ],
@@ -131,12 +124,18 @@ def openai_process(
     ]
     if image_data[0]:
         return base64_to_pil(image_data[0])
-    
-    raise Exception("OpenAI did not return an image format")
+
+    raise Exception("OpenAI did not return an image format.")
+
 
 # Pipeline function
-def resize_crop(image: Image.Image, resolution: Tuple[int,int] | None, *, context: ImageProcessingContext) -> Image.Image:
-    defaulted_resolution = (1200,1600) if resolution is None else resolution
+def resize_crop(
+    image: Image.Image,
+    resolution: Tuple[int, int] | None,
+    *,
+    context: ImageProcessingContext,
+) -> Image.Image:
+    defaulted_resolution = (1200, 1600) if resolution is None else resolution
     target_w, target_h = defaulted_resolution
     src_w, src_h = image.size
 
@@ -152,15 +151,15 @@ def resize_crop(image: Image.Image, resolution: Tuple[int,int] | None, *, contex
 
     return resized.crop((left, top, right, bottom))
 
+
 # Pipeline function
-def output_bytes(
-    image: Image.Image, format: str, *, context: dict
-) -> BytesIO:
+def output_bytes(image: Image.Image, format: str, *, context: dict) -> BytesIO:
     buffer = BytesIO()
     fmt = format.lstrip(".").upper()  # TODO: validation
     image.save(buffer, format=fmt)
     buffer.seek(0)
     return buffer
+
 
 # Pipeline function
 def output_image(
@@ -219,8 +218,11 @@ def _build_P_mode_palette_image(colors: Sequence[RGB]) -> Image.Image:
     pal.putpalette(flat)
     return pal
 
+
 # Pipeline function
-def quantize_to_palette(img: Image.Image, colors: Sequence[RGB], *, context: Dict) -> Image.Image:
+def quantize_to_palette(
+    img: Image.Image, colors: Sequence[RGB], *, context: Dict
+) -> Image.Image:
     """
     Remap `img` to `colors` using Pillow's fixed-palette quantizer (no dithering),
     then convert back to RGB. Keeps everything crisp and returns RGB.
@@ -236,6 +238,7 @@ def quantize_to_palette(img: Image.Image, colors: Sequence[RGB], *, context: Dic
 
 class PipelineError(RuntimeError):
     """Raised when a pipeline step fails or returns an invalid result."""
+
     pass
 
 
@@ -243,13 +246,14 @@ StepFn = Callable[..., Image.Image]
 FinishFn = Callable[..., None]
 
 # openai_process, resize_crop, quantize_to_palette, output_image
-PIPELINE_FUNCTIONS: Dict[str,Callable] = {
+PIPELINE_FUNCTIONS: Dict[str, Callable] = {
     "openai_process": openai_process,
     "resize_crop": resize_crop,
     "quantize_to_palette": quantize_to_palette,
     "output_image": output_image,
     "output_bytes": output_bytes,
 }
+
 
 def get_pipeline_function(functionName: str) -> Callable:
     result = PIPELINE_FUNCTIONS.get(functionName)
@@ -276,6 +280,7 @@ def run_art_generation_pipeline(
     - `pipeline_args[i]` supplies the positional args tuple for `pipeline[i]` (excluding `img`, `context`, and for the
       final step also excluding `output_path`, which is injected here).
     """
+
     def _get_PIL(input: Union[Path, str, bytes]):
         if isinstance(input, bytes):
             with BytesIO(input) as bytebuyffer:
@@ -288,20 +293,22 @@ def run_art_generation_pipeline(
     img = _get_PIL(input)
 
     if not context.pipeline:
-        raise ValueError(
-            "pipeline must contain at least one step"
-        )
+        raise ValueError("pipeline must contain at least one step")
 
     # Run all intermediate steps
-    for i, (step, args) in enumerate(zip(context.pipeline[:-1], context.pipeline_args[:-1])):
+    for i, (step, args) in enumerate(
+        zip(context.pipeline[:-1], context.pipeline_args[:-1])
+    ):
         if args is None:
             args = ()
         elif not isinstance(args, (tuple, list)):
             args = (args,)
-        context.logger.debug(f"Executing step {i+1} of pipeline: {step}")
+        context.logger.debug(f"Executing step {i + 1} of pipeline: {step}")
         context.current_arguments = context.pipeline_args[i]
         try:
-            img = get_pipeline_function(step)(img, *context.current_arguments, context=context)
+            img = get_pipeline_function(step)(
+                img, *context.current_arguments, context=context
+            )
             context.logger.debug(f"Successfully completed  step {i} of pipeline")
         except Exception as e:
             context.logger.error(f"Step {i} of pipeline FAILED with error: {str(e)}")
@@ -312,14 +319,20 @@ def run_art_generation_pipeline(
     final_step_i = len(context.pipeline)
     final_args = () if not context.pipeline_args else context.pipeline_args[-1]
     if final_args is None:
-        final_args = () 
+        final_args = ()
     elif not isinstance(final_args, (tuple, list)):
         final_args = (final_args,)
     try:
-        context.logger.debug(f"Executing final step {final_step_i} (saving) of pipeline")
+        context.logger.debug(
+            f"Executing final step {final_step_i} (saving) of pipeline"
+        )
         result = get_pipeline_function(final_step)(img, *final_args, context=context)
-        context.logger.debug(f"Successfully completed  final step {final_step_i} (saving) of pipeline")
+        context.logger.debug(
+            f"Successfully completed  final step {final_step_i} (saving) of pipeline"
+        )
         return result
     except Exception as e:
-        context.logger.error(f"Last step {final_step_i} (saving) of pipeline FAILED with error: {str(e)}")
+        context.logger.error(
+            f"Last step {final_step_i} (saving) of pipeline FAILED with error: {str(e)}"
+        )
         raise

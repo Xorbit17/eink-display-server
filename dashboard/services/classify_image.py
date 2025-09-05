@@ -4,35 +4,22 @@ from dashboard.constants import (
     IMAGE_EXTENSIONS,
     MIME_BY_EXT,
 )
-from dashboard.image_processing_declaration import (
-    ContentTypeClassification,
-    QualityClassification,
-    RenderDecision,
-)
 from dashboard.services.image_processing import file_to_base64
 from pathlib import Path
 from pydantic import BaseModel
 
+from dashboard.services.openai_prompting import (
+    get_content_type_prompt_context,
+    get_classification_model,
+    render_md_prompt,
+)
 
-CLASSIFY_PROMPT = (
+CLASSIFY_PROMPT_TEMPLATE = (
     Path(__file__).resolve().parent.parent / "context_templates" / "image-classifier.md"
 ).read_text()
 
-class ImageClassification(BaseModel):
-    quality: QualityClassification
-    contentType: ContentTypeClassification
-    renderDecision: RenderDecision
-    portrait: bool
-    multiplePersons: bool
-    portraitSuitable: bool
-    photoRealistic: bool 
-    cartoony: bool
-    art: bool
-    descriptionOfImage: str
-    qualityClassificationExplanation: str
 
-
-def classify_image(path: str) -> ImageClassification | None:
+def classify_image(path: str) -> BaseModel | None:
     """
     Upload an image and ask OpenAI to classify its suitability for e-ink portrait generation.
     Returns the model's text response.
@@ -44,27 +31,29 @@ def classify_image(path: str) -> ImageClassification | None:
             f"Unsupported image extension: {ext}. Supported: {sorted(IMAGE_EXTENSIONS)}"
         )
     # file_to_base64 automatically converts HEIC to JPG
-    mime = MIME_BY_EXT.get("jpg") if ext == 'heic' else MIME_BY_EXT.get(ext)
+    mime = MIME_BY_EXT.get("jpg") if ext == "heic" else MIME_BY_EXT.get(ext)
     image_b64 = file_to_base64(p)
+    prompt = render_md_prompt(CLASSIFY_PROMPT_TEMPLATE, get_content_type_prompt_context())
+    text_format = get_classification_model()
+
     response = openai_client.responses.parse(
         model="gpt-5",
-        text_format=ImageClassification,
+        text_format=text_format,
         input=[
             {
                 "role": "user",
                 "content": [
                     {
                         "type": "input_text",
-                        "text": CLASSIFY_PROMPT,
+                        "text": prompt,
                     },
                     {
                         "type": "input_image",
                         "image_url": f"data:{mime};base64,{image_b64}",
-                        "detail":"high", 
+                        "detail": "high",
                     },
                 ],
             }
         ],
     )
-    pass
     return response.output_parsed

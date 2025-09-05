@@ -114,6 +114,17 @@ class JobType(LabeledEnum):
 # NOTE: The previous TypeAlias definitions for Pydantic have been removed.
 # Pydantic models can use these Enums directly for validation.
 
+class QualityClassification(LabeledEnum):
+    NOT_SUITED = ("NOT_SUITED", "Not suited")
+    BAD = ("BAD", "Bad")
+    PASSABLE = ("PASSABLE", "Passable")
+    GOOD = ("GOOD", "Good")
+    VERY_GOOD = ("VERY_GOOD", "Very good")
+class RenderDecision(LabeledEnum):
+    BOTH = ("BOTH", "Both")
+    ARTIFY = ("ARTIFY", "Artify")
+    LEAVE_PHOTO = ("LEAVE_PHOTO", "Leave photo")
+
 IMAGE_EXTENSIONS = {".jpg", ".jpeg", ".png", ".gif", ".bmp", ".heic"}
 MIME_BY_EXT = {
     ".jpg": "image/jpeg",

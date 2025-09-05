@@ -1,4 +1,5 @@
 from typing import Any, Dict, Set, Tuple
+from enum import Enum
 
 def extract_rgb_set(palette: Dict[str, Any], *, coerce_lists: bool = False) -> Set[Tuple[int, int, int]]:
     out: Set[Tuple[int, int, int]] = set()
@@ -68,8 +69,8 @@ EXTENDED_PALETTE = {
     "native": NATIVE_COLORS,
     "extended": EXTENDED_COLORS,
 }
-EXTENDED_PALETTE_SET = extract_rgb_set(EXTENDED_PALETTE)
 
+EXTENDED_PALETTE_SET = extract_rgb_set(EXTENDED_PALETTE)
 
 SHADED_PALETTE = {
     "native": NATIVE_COLORS,
@@ -168,3 +169,28 @@ NATIVE_WITH_SKIN_PALETTE = {
 }
 
 NATIVE_WITH_SKIN_PALETTE_SET = extract_rgb_set(NATIVE_WITH_SKIN_PALETTE)
+
+class PaletteEnum(Enum):
+    NATIVE = NATIVE_PALETTE
+    EXTENDED = EXTENDED_PALETTE
+    SHADED = SHADED_PALETTE
+    NATIVE_WITH_SKIN = NATIVE_WITH_SKIN_PALETTE
+
+    def to_set(self) -> Set[Tuple[int, int, int]]:
+        """Return this palette as a set of RGB tuples."""
+        return extract_rgb_set(self.value)
+
+    @classmethod
+    def get(cls, name: str) -> Set[Tuple[int, int, int]]:
+        """
+        Retrieve a palette set by enum key (case-insensitive).
+        
+        Example:
+            PaletteEnum.get("native") -> { (0,0,0), (255,255,255), ... }
+        """
+        try:
+            member = cls[name.upper()]
+        except KeyError:
+            raise ValueError(f"Unknown palette '{name}'. Valid options: {[m.name for m in cls]}")
+        return member.to_set()
+    

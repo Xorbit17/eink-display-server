@@ -48,12 +48,11 @@ def file_to_base64(path: Path | str) -> str:
 
 def pil_to_base64(image: Image.Image, format: str = "PNG", **save_kwargs) -> str:
     buf = io.BytesIO()
-    # JPEG requires RGB (no alpha); strip alpha if needed
-    if format.upper() == "JPEG" and image.mode in ("RGBA", "LA"):
+    if image.mode in ("RGBA", "LA"):
         image = image.convert("RGB")
     image.save(buf, format=format, **save_kwargs)
     return base64.b64encode(buf.getvalue()).decode("utf-8")
 
 
 def base64_to_pil(b64: str) -> Image.Image:
-    return Image.open(io.BytesIO(base64.b64decode(b64))).convert("RGBA")
+    return Image.open(io.BytesIO(base64.b64decode(b64))).convert("RGB")
