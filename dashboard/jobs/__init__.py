@@ -4,5 +4,5 @@ from . import calendar
 from . import classify
 from . import dummy_job
 from . import generate_dashboard
-from . import generate_variant
+from . import generate_variants
 from . import get_weather

@@ -9,7 +9,7 @@ import json
 VALID_CHOICES = [member.value for member in JobKind]
 
 class Command(BaseCommand):
-    help = "Runs a specific job. First arg is the job kind; named args are job-specific."
+    help = "Runs a specific job. First arg is the job job_function_name; named args are job-specific."
 
     def add_arguments(self, parser):
         # positional: restrict to known kinds

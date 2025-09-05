@@ -88,18 +88,6 @@ class LogLevel(LabeledEnum):
     WARN = ("WARN", "Warning")
     ERROR = ("ERROR", "Error")
 
-class JobKind(LabeledEnum):
-    CALENDAR = ("CALENDAR", "Get calendar")
-    RSS = ("RSS", "Get RSS")
-    WEATHER = ("WEATHER", "Get weather")
-    PUSH = ("PUSH", "Push to displays")
-    ART = ("ART", "Generate art")
-    NEWSPAPER = ("NEWSPAPER", "Generate newspaper")
-    CLASSIFY = ("CLASSIFY", "Classify image")
-    MANUAL_TRIGGER = ("MANUAL_TRIGGER", "Manually triggered")
-    DASHBOARD = ("DASHBOARD", "Generate dashboard")
-    DUMMY = ("DUMMY", "Dummy job to test the scheduler and the commands")
-
 class JobStatus(LabeledEnum):
     RUNNING = ("RUNNING", "Running")
     SUCCESS = ("SUCCESS", "Success")

@@ -1,5 +1,5 @@
-from typing import Callable, Dict, Any, Tuple, Type
-from dashboard.constants import JobKind, JobStatus, JobType
+from typing import Dict, Any, Tuple, Type, Protocol
+from dashboard.constants import JobStatus, JobType
 from dashboard.models.job import Job, Execution
 from django.utils import timezone
 
@@ -9,36 +9,65 @@ from pydantic import BaseModel
 
 from dashboard.services.logger_job import JobLogger
 
-Handler = Callable[[Job, JobLogger, Any], str | None]
+class JobFunctionNotFoundException(Exception):
+    def __init__(self, *args: object) -> None:
+        super().__init__(*args)
 
-_registry: Dict[str, Tuple[Handler, Optional[Type[BaseModel]]]] = {}
 
-def register(kind: JobKind, param_model: Optional[Type[BaseModel]] = None):
-    def deco(fn: Handler):
-        _registry[kind] = (fn, param_model)
-        return fn
+class BadJobArgumentsException(Exception):
+    def __init__(self, *args: object) -> None:
+        super().__init__(*args)
+
+class JobErrorException(Exception):
+    def __init__(self, *args: object) -> None:
+        super().__init__(*args)
+
+class JobFunction(Protocol):
+    def __call__(
+        self,
+        job: Job,
+        logger: JobLogger,
+        /,
+        *args: Any,
+        **kwargs: Any,
+    ) -> None: ...
+
+
+_registry: Dict[str, Tuple[JobFunction, Optional[Type[BaseModel]]]] = {}
+
+def job_function(name: str, param_model: Optional[Type[BaseModel]] = None):
+    def deco(fn: JobFunction) -> JobFunction:
+        def job_function(
+            job: Job, logger: JobLogger, /, *args: Any, **kwargs: Any
+        ) -> None:
+            if param_model:
+                # Check
+                validated_kwargs = param_model.model_validate(dict(**kwargs)).model_dump()
+                result = fn(job, logger, *args, **validated_kwargs)
+                return result
+            return fn(job, logger, *args, **kwargs)
+
+        _registry[name] = (job_function, param_model)
+        return job_function
+
     return deco
 
-def get_handler(kind: JobKind) -> Handler:
-    try:
-        return _registry[kind][0]
-    except KeyError:
-        raise KeyError(f"No handler registered for kind '{kind}'")
+def get_job_function_and_model(name: str) -> Tuple[JobFunction, Type[BaseModel] | None]:
+    result = _registry.get(name, None)
+    if not result:
+        available = ", ".join(sorted(_registry))
+        raise JobFunctionNotFoundException(
+            f"No pipeline function '{name}'. Available: [{available}]"
+        )
+    return result
+
+def get_job_function(name:str) -> JobFunction:
+    return get_job_function_and_model(name)[0]
     
-def get_validator(kind: JobKind) -> Type[BaseModel] | None:
-    try:
-        return _registry[kind][1]
-    except KeyError:
-        raise KeyError(f"No validator registered for kind '{kind}'. Shoud be defined and automatically None if no params. Impossible")
-    
-def test_job(jobKind: JobKind, rethrow: bool = False, *, params: Dict[str,Any]):
-    validator = get_validator(jobKind)
-    validated_params = None
-    if validator:
-        validated_params = validator.model_validate(params)
+def test_job_sync(name: str, /, rethrow: bool = False, **kwargs):
     job = Job.objects.create(
         name="Manually triggered",
-        kind=jobKind,
+        job_function_name=name,
         job_type = JobType.MANUAL,
         enabled=True,
         params="",
@@ -47,12 +76,12 @@ def test_job(jobKind: JobKind, rethrow: bool = False, *, params: Dict[str,Any]):
         job=job,
         started_at=timezone.now(),
         status=JobStatus.RUNNING,
-        params=params or {},
+        params=kwargs,
     )
     logger = JobLogger(job, execution)
-    handler = get_handler(jobKind)
+    job_function = get_job_function_and_model(name)[0]
     try:
-        handler(job, logger, validated_params)
+        job_function(job, logger, **kwargs)
         logger._close_success("Job execution succeeded")
     except Exception as e:
         logger._close_error(e, "Job execution failed")
@@ -70,11 +99,10 @@ def run_execution(execution: Execution):
     execution.refresh_from_db(fields=["status", "started_at"])
 
     logger = JobLogger(job, execution)
-    handler = get_handler(cast(JobKind,job.kind))
-    validator = get_validator(cast(JobKind,job.kind))
-    params  = validator.model_validate(execution.params) if validator else {}
+    job_function = get_job_function_and_model(job.job_function_name)[0]
+    params = job.params
     try:
-        handler(job, logger, params)
+        job_function(job, logger, **params)
         logger._close_success("Job execution succeeded")
     except Exception as e:
         logger._close_error(e, "Job execution failed")

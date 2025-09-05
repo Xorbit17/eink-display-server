@@ -4,7 +4,6 @@ from django.db import models
 from django.utils import timezone
 from dashboard.constants import (
     LogLevel,
-    JobKind,
     JobStatus,
     JobType,
 )
@@ -12,11 +11,12 @@ from dashboard.constants import (
 
 class Job(models.Model):
     name = models.CharField(max_length=120)
-    kind = models.CharField(max_length=64, choices=JobKind.choices())
+    job_function_name = models.CharField(max_length=64)
     job_type = models.CharField(max_length=64, choices=JobType.choices())
     cron = models.CharField(
         max_length=64, help_text="Cron format, e.g. '0 5 * * *'", null=True
     )
+    order = models.PositiveIntegerField(default=0)
     enabled = models.BooleanField(default=True)
 
     # Optional parameters for the handler
@@ -36,7 +36,7 @@ class Job(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self) -> str:
-        return f"Job({self.pk}): {self.name} [{self.kind}]"
+        return f"Job({self.pk}): {self.name} [{self.job_function_name}]"
 
 
 class Execution(models.Model):

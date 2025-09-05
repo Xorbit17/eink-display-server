@@ -1,16 +1,15 @@
 from django.db import models
-from dashboard.image_processing_declaration import (
-    ART_STYLE_CHOICES, 
-    QUALITY_CLASSIFICATION_CHOICES,
-    CONTENT_TYPE_CLASSIFICATION_CHOICES,
-)
-
+from dashboard.constants import QualityClassification
 class SourceImage(models.Model):
     path = models.TextField()
     classification = models.JSONField(null=True, default=None)  # null => not classified yet
-    has_variants = models.BooleanField(default=False)
+    score = models.FloatField()
+    favorite = models.BooleanField(default = False)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+    def has_variants(self) -> bool:
+        return self.variants.exists() # type: ignore
 
     def __str__(self) -> str:
         return f"SourceImage({self.pk}): {self.path}"
@@ -21,17 +20,15 @@ class Variant(models.Model):
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
-        related_name="rendered_assets",
+        related_name="variants",
     )
     path = models.TextField(null=True, default=None) # Null means variant was created but generation has crashed
-    art_style = models.CharField(max_length=64, choices=ART_STYLE_CHOICES, null=True, default=None)
+    art_style = models.CharField(max_length=64)
     
-    source_quality = models.CharField(choices=QUALITY_CLASSIFICATION_CHOICES)
-    content_type = models.CharField(choices=CONTENT_TYPE_CLASSIFICATION_CHOICES)
+    source_quality = models.CharField(choices=QualityClassification.choices())
+    content_type = models.CharField(max_length=64)
     photorealist = models.BooleanField()
-    favourite = models.BooleanField()
-
-    score= models.FloatField(default=0) # Score determines how often image is shown
+    favorite = models.BooleanField(default=False)
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

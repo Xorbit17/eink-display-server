@@ -1,4 +1,3 @@
-from dashboard.services.scoring import calculate_final_score
 from dashboard.models.photos import Variant
 from typing import Iterable, List, Tuple
 import random
@@ -27,9 +26,10 @@ def _weighted_choice(items: Iterable[Tuple[Variant, float]]) -> Variant:
     idx = bisect(cumulative, r)
     return variants[idx]
 
+
 def get_variant():
     qs = Variant.objects.only(
-        "id", "path", "score", "favourite", "created_at"
+        "id", "path", "score", "favorite", "created_at"
     ).filter(path__isnull=False).order_by("-score")[:10000]
     if not qs.exists():
         raise Exception("No images available.")
@@ -38,11 +38,7 @@ def get_variant():
     pairs: List[Tuple[Variant, float]] = []
     for v in qs.iterator():
         # v.score is your persisted static score
-        final_score = calculate_final_score(
-            static_score=float(v.score or 0.0),
-            favourite=bool(v.favourite),
-            created_at=v.created_at,
-        )
+        final_score = 0.5
         pairs.append((v, final_score))
 
     return _weighted_choice(pairs)

@@ -1,4 +1,5 @@
 from __future__ import annotations
+from dashboard.jobs.job_registry import JobErrorException
 from dashboard.services.openai import openai_client
 from dashboard.constants import (
     IMAGE_EXTENSIONS,
@@ -6,12 +7,13 @@ from dashboard.constants import (
 )
 from dashboard.services.image_processing import file_to_base64
 from pathlib import Path
-from pydantic import BaseModel
+from typing import cast
 
 from dashboard.services.openai_prompting import (
     get_content_type_prompt_context,
     get_classification_model,
     render_md_prompt,
+    GenericImageClassification,
 )
 
 CLASSIFY_PROMPT_TEMPLATE = (
@@ -19,7 +21,7 @@ CLASSIFY_PROMPT_TEMPLATE = (
 ).read_text()
 
 
-def classify_image(path: str) -> BaseModel | None:
+def classify_image(path: str | Path) -> GenericImageClassification:
     """
     Upload an image and ask OpenAI to classify its suitability for e-ink portrait generation.
     Returns the model's text response.
@@ -56,4 +58,8 @@ def classify_image(path: str) -> BaseModel | None:
             }
         ],
     )
-    return response.output_parsed
+    
+    if response.output_parsed is None:
+        raise JobErrorException("Classification function did not succeed")
+    
+    return cast(GenericImageClassification,response.output_parsed.model_dump())

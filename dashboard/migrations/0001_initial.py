@@ -34,7 +34,7 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('name', models.CharField(max_length=120)),
-                ('kind', models.CharField(choices=[('CALENDAR', 'Get calendar'), ('RSS', 'Get RSS'), ('WEATHER', 'Get weather'), ('PUSH', 'Push to displays'), ('ART', 'Generate art'), ('NEWSPAPER', 'Generate newspaper'), ('CLASSIFY', 'Classify image'), ('MANUAL_TRIGGER', 'Manually triggered'), ('DASHBOARD', 'Generate dashboard'), ('DUMMY', 'Dummy job to test the scheduler and the commands')], max_length=64)),
+                ('job_function_name', models.CharField(choices=[('CALENDAR', 'Get calendar'), ('RSS', 'Get RSS'), ('WEATHER', 'Get weather'), ('PUSH', 'Push to displays'), ('ART', 'Generate art'), ('NEWSPAPER', 'Generate newspaper'), ('CLASSIFY', 'Classify image'), ('MANUAL_TRIGGER', 'Manually triggered'), ('DASHBOARD', 'Generate dashboard'), ('DUMMY', 'Dummy job to test the scheduler and the commands')], max_length=64)),
                 ('job_type', models.CharField(choices=[('CRON', 'Triggered by chron'), ('MANUAL', 'Triggered manually')], max_length=64)),
                 ('cron', models.CharField(help_text="Cron format, e.g. '0 5 * * *'", max_length=64, null=True)),
                 ('enabled', models.BooleanField(default=True)),
@@ -188,7 +188,7 @@ class Migration(migrations.Migration):
                 ('source_quality', models.CharField(choices=[('NOT_SUITED', 'Not suited'), ('BAD', 'Bad'), ('PASSABLE', 'Passable'), ('GOOD', 'Good'), ('VERY_GOOD', 'Very good')])),
                 ('content_type', models.CharField(choices=[('PERSON', 'Person'), ('PEOPLE', 'People'), ('ANIMAL', 'Animal'), ('LANDSCAPE', 'Landscape'), ('CITY', 'City'), ('BUILDING', 'Building'), ('NATURE', 'Nature'), ('ART', 'Art'), ('OBJECT', 'Object'), ('OTHER', 'Other')])),
                 ('photorealist', models.BooleanField()),
-                ('favourite', models.BooleanField()),
+                ('favorite', models.BooleanField()),
                 ('score', models.FloatField(default=0)),
                 ('created_at', models.DateTimeField(auto_now_add=True)),
                 ('updated_at', models.DateTimeField(auto_now=True)),

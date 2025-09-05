@@ -22,13 +22,13 @@ class SourceImageAdmin(admin.ModelAdmin):
 @admin.register(Variant)
 class RenderedAssetAdmin(admin.ModelAdmin):
     list_display = [f.name for f in Variant._meta.fields]
-    list_filter = ("art_style","content_type","photorealist","favourite","source_quality")
+    list_filter = ("art_style","content_type","photorealist","favorite","source_quality")
     search_fields = ("path", "art_style",)
     readonly_fields = ("source_image", "created_at", "updated_at")
 @admin.register(Job)
 class JobAdmin(admin.ModelAdmin):
     list_display = [f.name for f in Job._meta.fields]
-    list_filter = ("enabled", "kind", "last_run_status")
+    list_filter = ("enabled", "job_function_name", "last_run_status")
     search_fields = ("name",)
     readonly_fields = ("created_at", "updated_at")
 

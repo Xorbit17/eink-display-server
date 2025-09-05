@@ -93,6 +93,9 @@ def get_pipeline_function_and_model(name: str) -> Tuple[PipelineFunction, Type[B
         )
     return result
 
+def get_pipeline_function(name: str) -> PipelineFunction:
+    return get_pipeline_function_and_model(name)[0]
+
 def output_bytes(image: Image) -> BytesIO:
     buffer = BytesIO()
     image.save(buffer, format="PNG")
@@ -111,7 +114,7 @@ def output_file(image: Image, output: Path | str) -> Path:
 def noop(image: Image, _) -> Image:
     return image
 
-def default_to_image(input: Image | BytesIO | bytes) -> Image:
+def default_to_image(input: Image | BytesIO | bytes | Path) -> Image:
     if isinstance(input, Image):
         return input
     return open(input).convert("RGB")
@@ -140,10 +143,10 @@ def load_pipeline(data: list[dict[str, Any]]) -> list[ImageProcessingPipelineSte
 
 
 def process(
-    input: Image | BytesIO | bytes,
+    input: Image | BytesIO | bytes | Path,
     pipeline: Iterable[ImageProcessingPipelineStep],
     *,
-    output_format: ImageProcessingOutputEnum = ImageProcessingOutputEnum.BYTES,
+    output_format: ImageProcessingOutputEnum | None = None,
     output_path: Path | None = None,
     classification: GenericImageClassification | None = None,
     logger: BaseLogger,
@@ -153,6 +156,12 @@ def process(
         raise BadPipelineArgumentsException(
             "When output type is FILE keyword arg output_path must be provided"
         )
+    if output_path and not output_format:
+        output_format = ImageProcessingOutputEnum.FILE
+    if not output_path and not output_format:
+        output_format = ImageProcessingOutputEnum.BYTES
+    if output_path and output_format == ImageProcessingOutputEnum.BYTES:
+        logger.warn("Something weird is going on. Output path was specified and output type is bytes (no file output)")
 
     for i, step in enumerate(pipeline):
         context = ImageProcessingContext(

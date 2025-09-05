@@ -1,4 +1,4 @@
-from dashboard.jobs.job_registry import register
+from dashboard.jobs.job_registry import job_function
 from dashboard.services.logger_job import JobLogger
 from pydantic import BaseModel
 from typing import Optional
@@ -7,20 +7,18 @@ from django.utils import timezone
 from datetime import timedelta
 from dashboard.models.calendar import CalendarOccurrence, CalendarSource
 from django.db import transaction
-from dashboard.constants import JobKind
-
 
 class CalendarJobParams(BaseModel):
     days_ahead: Optional[int] = None
 
 
-@register(JobKind.CALENDAR, CalendarJobParams)
-def get_calendar(_, logger: JobLogger, params=CalendarJobParams):
+@job_function("get_calendar", CalendarJobParams)
+def get_calendar(_, logger: JobLogger, /, days_ahead):
     logger.info("Starting calendar job")
     start = timezone.now()
     start_day = start.replace(minute=0, hour=0)
 
-    end = start_day + timedelta(params.days_ahead) if params.days_ahead is not None else None
+    end = start_day + timedelta(days_ahead) if days_ahead is not None else None
 
     sources = CalendarSource.objects.filter(active=True)
 

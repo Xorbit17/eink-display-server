@@ -1,134 +1,108 @@
-from dashboard.image_processing_declaration import (
-    NOT_SUITED,
-    BAD,
-    PASSABLE,
-    GOOD,
-    VERY_GOOD,
-    PERSON,
-    PEOPLE,
-    ANIMAL,
-    LANDSCAPE,
-    CITY,
-    BUILDING,
-    NATURE,
-    ART,
-    OBJECT,
-    OTHER,
-)
-from typing import Dict
+from typing import Dict, Iterable, List
 from django.utils import timezone
 from datetime import datetime
 from math import exp, log
+from dashboard.constants import QualityClassification, RenderDecision
+from dashboard.models.art import ContentType
+from dashboard.models.photos import SourceImage
+from dashboard.services.openai_prompting import GenericImageClassification
+import random
+from bisect import bisect
 
-QUALITY_MAP: Dict[str,float] = {
-    NOT_SUITED: 0.0,
-    BAD: 0.2,
-    PASSABLE :0.5,
-    GOOD: 0.8,
-    VERY_GOOD: 0.95,
-}
-
-CONTENT_TYPE_MAP: Dict[str, float] = {
-    PERSON: 0.5,
-    PEOPLE: 0.5,
-    ANIMAL: 0.5,
-    LANDSCAPE: 0.5,
-    CITY: 0.5,
-    BUILDING: 0.5,
-    NATURE: 0.5,
-    ART: 0.5,
-    OBJECT: 0.5,
-    OTHER: 0.5,
+QUALITY_MAP: Dict[QualityClassification,float] = {
+    QualityClassification.NOT_SUITED: 0.0,
+    QualityClassification.BAD: 0.2,
+    QualityClassification.PASSABLE :0.4,
+    QualityClassification.GOOD: 0.7,
+    QualityClassification.VERY_GOOD: 0.95,
 }
 
 # 0.5 is Neutral preference (>0.5 for pro-photo, <0.5 for pro-art)
-PHOTOREALIST_SCORE: float = 0.5
+PHOTOREALIST_SCORE = 0.5
 
-Q_FACTOR = 1.0
-C_FACTOR = 0.5
-P_FACTOR = 0.5
-
-# How strongly "favourite" should influence the final score (0..1, normalized inside).
-FAVOURITE_FACTOR: float = 0.75
+# Relative importance of 
+Q_FACTOR = 1.0 # Quality
+C_FACTOR = 0.5 # Content type
+P_FACTOR = 0.5 # Photorealism
 
 # How strongly "date/novelty" should influence the final score (0..1, normalized inside).
-DATE_FACTOR: float = 0.75
+DATE_FACTOR = 0.8
 
-# Map the favourite boolean to a score in [0..1].
-# With 0.5 it's neutral; increase to >0.5 to give favourites a boost.
-FAVOURITE_SCORE: float = 0.75
+HAS_VARIANT_FACTOR = 0.8
+
+# Map the favorite boolean to a score in [0..1].
+# With 0.5 it's neutral; increase to >0.5 to give favorites a boost.
+FAVORITE_SCORE = 0.75
+FAVORITE_FACTOR = 0.75
 
 # Novelty curve: half-life (in days) controls how fast the boost decays.
-NOVELTY_HALF_LIFE_DAYS: float = 14.0
+NOVELTY_HALF_LIFE_DAYS = 14
 
 # Minimum novelty value as items age (never demote to zero).
-NOVELTY_FLOOR: float = 0.30
+NOVELTY_FLOOR = 0.30
 
-def calculate_static_score(
-    quality: str,
-    content_type: str,
-    photorealist: bool,
+epsilon = 1e-6
+
+def clamp(x: float) -> float:
+    return max(epsilon, min(x, 1.0))
+
+def weighted_geometric_mean(a: Iterable[float], factors:Iterable[float]) -> float:
+    total = sum(factors) or 1.0
+    weights = [f / total for f in factors]
+    acc = 1.0
+    for x, w in zip(a, weights):
+        acc *= max(min(x, 1.0), epsilon) ** w
+    return clamp(acc)
+
+def calculate_static_score_for_source(
+    classification: GenericImageClassification,
 ) -> float:
     """
     Weighted geometric mean of (quality, content, photorealism-preference).
     Returns a value in [0, 1].
     """
-    q_score = QUALITY_MAP.get(quality, 0.5)
-    c_score = CONTENT_TYPE_MAP.get(content_type, 0.5)
+    photorealist = True
+    if classification.art or classification.cartoony:
+        photorealist = False
+    
+    q_score = QUALITY_MAP.get(classification.quality, 0.5)
+    c_score = ContentType.objects.get(name=classification.contentType).score
     p_score = PHOTOREALIST_SCORE if photorealist else (1.0 - PHOTOREALIST_SCORE)
 
-    # Normalize factors -> weights
-    factors = [Q_FACTOR, C_FACTOR, P_FACTOR]
-    total = sum(factors) or 1.0
-    weights = [f / total for f in factors]
+    return weighted_geometric_mean((q_score, c_score, p_score),(Q_FACTOR, C_FACTOR, P_FACTOR))
 
-    epsilon = 1e-6
-    s = 1.0
-    for val, w in zip((q_score, c_score, p_score), weights):
-        s *= max(min(val, 1.0), epsilon) ** w
-
-    return s
-
-def calculate_final_score(
-    static_score: float,
-    favourite: bool,
-    created_at: datetime,
+def calculate_final_score_for_source(
+    source_img: SourceImage,
 ) -> float:
-    """
-    Weighted geometric mean of:
-      - static_score (already in [0,1])
-      - favourite score (boost if favourite=True)
-      - novelty score based on recency (decays with half-life, floors at NOVELTY_FLOOR)
+    fav_score = FAVORITE_SCORE if source_img.favorite else (1.0 - FAVORITE_SCORE)
 
-    Returns a float in [0,1].
-    """
-    # 1) Favourite -> score in [0,1]
-    fav_score = FAVOURITE_SCORE if favourite else (1.0 - FAVOURITE_SCORE)
-
-    # 2) Novelty -> score in [NOVELTY_FLOOR, 1]
     now = timezone.now()
-    age_seconds = max((now - created_at).total_seconds(), 0.0)
+    age_seconds = max((now - source_img.created_at).total_seconds(), 0.0)
     age_days = age_seconds / 86400.0
+
+    variant_score = 0.3 if source_img.has_variants() else 0.7
 
     # Exponential decay to a floor: 1 at t=0, approaches NOVELTY_FLOOR as t grows.
     decay = exp(-log(2) * (age_days / max(NOVELTY_HALF_LIFE_DAYS, 1e-6)))
     novelty_score = NOVELTY_FLOOR + (1.0 - NOVELTY_FLOOR) * decay
+    scores = [clamp(source_img.score), fav_score, clamp(novelty_score), variant_score]
+    factors = [1.0, FAVORITE_FACTOR, DATE_FACTOR, HAS_VARIANT_FACTOR]
 
-    # 3) Weighted geometric mean of (static, favourite, novelty)
-    #    We give "static" an implicit base weight of 1.0 so you only tune the extras.
-    factors = [1.0, FAVOURITE_FACTOR, DATE_FACTOR]
-    total = sum(factors)
-    weights = [f / total for f in factors]
+    # We give "static" an implicit base weight of 1.0 so we only tune the extras.
+    return weighted_geometric_mean(scores,factors)
 
-    # Clamp to avoid log(0) behaviour and keep everything in [0,1]
-    epsilon = 1e-6
-    s = 1.0
-    for val, w in zip(
-        (max(min(static_score, 1.0), epsilon),
-         max(min(fav_score, 1.0), epsilon),
-         max(min(novelty_score, 1.0), epsilon)),
-        weights,
-    ):
-        s *= val ** w
+def select_random_sources(items: list[SourceImage], max_to_select: int) -> list[SourceImage]:
+    pick_list = [
+        {"source": s, "score": max(0.0, float(calculate_final_score_for_source(s) or 0.0))}
+        for s in items
+    ]
+    weights = [x["score"] for x in pick_list]
+    n = min(len(pick_list), max_to_select)
 
-    return max(0.0, min(s, 1.0))
+    if not any(weights):
+        return []
+
+    chosen = random.choices(pick_list, weights=weights, k=n)
+    return [c["source"] for c in chosen]
+
+# TODO select variant based on novelty etc

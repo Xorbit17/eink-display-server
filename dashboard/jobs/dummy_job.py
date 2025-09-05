@@ -1,19 +1,16 @@
-from dashboard.jobs.job_registry import register
+from dashboard.jobs.job_registry import job_function
 from dashboard.services.logger_job import JobLogger
 from pydantic import BaseModel, PositiveInt
 from typing import Optional
 from time import sleep
-from dashboard.constants import JobKind
-
 class DummyJobParams(BaseModel):
     wait_time_ms: Optional[PositiveInt] = 0
-    message: Optional[str] = None
+    message: Optional[str] = "No message"
 
 
-@register(JobKind.DUMMY, DummyJobParams)
-def dummy_job(_, logger: JobLogger, params: DummyJobParams):
-    message = "Starting dummy job" if not params.message else f"Starting dummmy job: {params}"
-    logger.info(message)
-    if params.wait_time_ms:
-        sleep(params.wait_time_ms / 1000.0)
-
+@job_function("dummy", DummyJobParams)
+def dummy_job(_, logger: JobLogger, wait_time_ms, message):
+    to_print = "Starting dummy job" if not message else message
+    logger.info(to_print)
+    if wait_time_ms:
+        sleep(wait_time_ms / 1000.0)
