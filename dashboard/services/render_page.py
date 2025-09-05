@@ -1,6 +1,6 @@
 from playwright.sync_api import sync_playwright
-from dashboard.services.generate_art import run_art_generation_pipeline, ImageProcessingContext
-from dashboard.services.generate_art import ConsoleLogger
+from dashboard.image_processing_pipeline.generate_art import run_art_generation_pipeline, ImageProcessingContext
+from dashboard.image_processing_pipeline.generate_art import ConsoleLogger
 from dashboard.color_constants import EXTENDED_PALETTE_SET
 from typing import cast
 

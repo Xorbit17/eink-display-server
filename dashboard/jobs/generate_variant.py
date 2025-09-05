@@ -3,15 +3,16 @@ from pathlib import Path
 from dashboard.jobs.job_registry import register
 from dashboard.models.job import Job
 from dashboard.models.photos import SourceImage, Variant
-from dashboard.services.logger_job import RunLogger
+from dashboard.services.logger_job import JobLogger
 from pydantic import BaseModel
-from dashboard.services.generate_art import run_art_generation_pipeline, ImageProcessingContext
+from dashboard.image_processing_pipeline.generate_art import run_art_generation_pipeline, ImageProcessingContext
 from dashboard.services.classify_image import ImageClassification
 from random import random, choice
 from typing import cast, Optional
 from dashboard.services.scoring import calculate_static_score
 from dashboard.constants import JobKind
 
+# TODO: Refactor to use new database powered art styles and new pipeline system
 class GenerateVariantParams(BaseModel):
     source_image_id: int
     art_style_force: Optional[ArtStyle]
@@ -34,7 +35,7 @@ def decide_art_style(classification: ImageClassification) ->  ArtStyle:
     return cast(ArtStyle,random_art_style)
 
 @register(JobKind.ART, GenerateVariantParams)
-def generate_variant(job: Job, logger: RunLogger, params: GenerateVariantParams | None):
+def generate_variant(job: Job, logger: JobLogger, params: GenerateVariantParams | None):
     if not params:
         raise RuntimeError("generate variant requires params")
     src = SourceImage.objects.get(pk=params.source_image_id)
@@ -42,7 +43,8 @@ def generate_variant(job: Job, logger: RunLogger, params: GenerateVariantParams 
         raise RuntimeError(f"Source image with id {params.source_image_id} not found")
 
     if not src.classification:
-        raise RuntimeError("Image has not been calassified yet. Cannot create variant")
+        raise RuntimeError("Image has not been classified yet. Cannot create variant")
+    
     classification = ImageClassification.model_validate(src.classification)
     logger.debug(f"Starting generation of variant of source image with id {src.pk}")
 
@@ -77,14 +79,6 @@ def generate_variant(job: Job, logger: RunLogger, params: GenerateVariantParams 
     # Pipeline needs refactoring though
     pipeline.append("output_image")
     pipeline_args.append((output,"png"))
-
-    context = ImageProcessingContext(
-        classification=classification,
-        art_style=art_style,
-        pipeline=pipeline,
-        pipeline_args=pipeline_args,
-        logger=logger,
-    )
 
     try:
         run_art_generation_pipeline(

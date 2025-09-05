@@ -1,5 +1,5 @@
 from dashboard.jobs.job_registry import register
-from dashboard.services.logger_job import RunLogger
+from dashboard.services.logger_job import JobLogger
 from pydantic import BaseModel
 from typing import Optional
 import dashboard.services.get_calendar as service
@@ -15,7 +15,7 @@ class CalendarJobParams(BaseModel):
 
 
 @register(JobKind.CALENDAR, CalendarJobParams)
-def get_calendar(_, logger: RunLogger, params=CalendarJobParams):
+def get_calendar(_, logger: JobLogger, params=CalendarJobParams):
     logger.info("Starting calendar job")
     start = timezone.now()
     start_day = start.replace(minute=0, hour=0)

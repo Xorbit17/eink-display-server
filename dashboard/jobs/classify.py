@@ -5,7 +5,7 @@ import random
 
 from dashboard.models.job import Job
 from dashboard.models.photos import SourceImage
-from dashboard.services.logger_job import RunLogger
+from dashboard.services.logger_job import JobLogger
 from dashboard.constants import (
     IMAGE_DIR,
     IMAGE_EXTENSIONS,
@@ -36,7 +36,7 @@ def is_portrait(path: str) -> bool:
         w, h = img.size
     return h >= w * 1.2  # e.g. portrait if height is at least 20% greater
 
-def classify_new_image(path: str, logger: RunLogger, params: dict | None):
+def classify_new_image(path: str, logger: JobLogger, params: dict | None):
     classification = None
     try:
         classification = classify_image(path)
@@ -55,7 +55,7 @@ def classify_new_image(path: str, logger: RunLogger, params: dict | None):
 
 
 @register(JobKind.CLASSIFY)
-def classify_images(job: Job, logger: RunLogger, params: dict | None):
+def classify_images(job: Job, logger: JobLogger, params: dict | None):
     max_num_to_classify = int((params or {}).get("max_num_to_classify", 1))
     if max_num_to_classify <= 0:
         logger.warn("Nothing to do: max_num_to_generate <= 0")

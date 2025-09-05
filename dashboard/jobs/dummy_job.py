@@ -1,5 +1,5 @@
 from dashboard.jobs.job_registry import register
-from dashboard.services.logger_job import RunLogger
+from dashboard.services.logger_job import JobLogger
 from pydantic import BaseModel, PositiveInt
 from typing import Optional
 from time import sleep
@@ -11,7 +11,7 @@ class DummyJobParams(BaseModel):
 
 
 @register(JobKind.DUMMY, DummyJobParams)
-def dummy_job(_, logger: RunLogger, params: DummyJobParams):
+def dummy_job(_, logger: JobLogger, params: DummyJobParams):
     message = "Starting dummy job" if not params.message else f"Starting dummmy job: {params}"
     logger.info(message)
     if params.wait_time_ms:

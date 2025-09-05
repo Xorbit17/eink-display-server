@@ -2,13 +2,14 @@ from dataclasses import dataclass, field
 from typing import Optional, Dict, Any
 from django.utils import timezone
 import traceback
+from dashboard.server_types import BaseLogger
 from dashboard.models.job import Job, JobLogEntry, Execution
 from dashboard.constants import JobStatus
 
 MAX_LINES_PER_RUN = 500
 
 @dataclass
-class RunLogger:
+class JobLogger(BaseLogger):
     job: Job
     execution: Execution
     _seq: int = 0

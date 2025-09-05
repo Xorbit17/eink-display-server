@@ -7,9 +7,9 @@ from typing import Optional, cast
 from django.db import transaction
 from pydantic import BaseModel
 
-from dashboard.services.logger_job import RunLogger
+from dashboard.services.logger_job import JobLogger
 
-Handler = Callable[[Job, RunLogger, Any], str | None]
+Handler = Callable[[Job, JobLogger, Any], str | None]
 
 _registry: Dict[str, Tuple[Handler, Optional[Type[BaseModel]]]] = {}
 
@@ -49,7 +49,7 @@ def test_job(jobKind: JobKind, rethrow: bool = False, *, params: Dict[str,Any]):
         status=JobStatus.RUNNING,
         params=params or {},
     )
-    logger = RunLogger(job, execution)
+    logger = JobLogger(job, execution)
     handler = get_handler(jobKind)
     try:
         handler(job, logger, validated_params)
@@ -69,7 +69,7 @@ def run_execution(execution: Execution):
     Execution.objects.filter(pk=execution.pk, status=JobStatus.RUNNING).update(started_at=timezone.now())
     execution.refresh_from_db(fields=["status", "started_at"])
 
-    logger = RunLogger(job, execution)
+    logger = JobLogger(job, execution)
     handler = get_handler(cast(JobKind,job.kind))
     validator = get_validator(cast(JobKind,job.kind))
     params  = validator.model_validate(execution.params) if validator else {}

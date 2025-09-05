@@ -23,6 +23,8 @@ class Artstyle(models.Model):
     def __str__(self):
         return self.name
     
+    
+    
 class ArtstyleContentType(models.Model):
     artstyle=models.ForeignKey(Artstyle, on_delete=models.CASCADE)
     content_type=models.ForeignKey(ContentType, on_delete=models.CASCADE)

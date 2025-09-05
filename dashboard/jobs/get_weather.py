@@ -1,5 +1,5 @@
 from dashboard.jobs.job_registry import register
-from dashboard.services.logger_job import RunLogger
+from dashboard.services.logger_job import JobLogger
 from django.utils import timezone
 from dashboard.models.weather import DayForecast, Location, WeatherDetail
 import dashboard.services.get_weather as weather_service
@@ -71,7 +71,7 @@ def process_record(input: weather_service.DailyItem, location: Location, context
 
 
 @register(JobKind.WEATHER)
-def get_weather(_, logger: RunLogger, params):
+def get_weather(_, logger: JobLogger, params):
     now = timezone.now()
     locations = Location.objects.all()
     for location in locations:
