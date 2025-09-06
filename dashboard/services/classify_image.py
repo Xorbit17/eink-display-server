@@ -4,6 +4,7 @@ from dashboard.services.openai import openai_client
 from dashboard.constants import (
     IMAGE_EXTENSIONS,
     MIME_BY_EXT,
+    IMAGE_CLASSIFICATION_MODEL,
 )
 from dashboard.services.image_processing import file_to_base64
 from pathlib import Path
@@ -39,7 +40,7 @@ def classify_image(path: str | Path) -> GenericImageClassification:
     text_format = get_classification_model()
 
     response = openai_client.responses.parse(
-        model="gpt-5",
+        model=IMAGE_CLASSIFICATION_MODEL,
         text_format=text_format,
         input=[
             {

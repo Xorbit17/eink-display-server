@@ -3,7 +3,7 @@ from dashboard.constants import QualityClassification
 class SourceImage(models.Model):
     path = models.TextField()
     classification = models.JSONField(null=True, default=None)  # null => not classified yet
-    score = models.FloatField()
+    score = models.FloatField(default=0.5)
     favorite = models.BooleanField(default = False)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -24,6 +24,8 @@ class Variant(models.Model):
     )
     path = models.TextField(null=True, default=None) # Null means variant was created but generation has crashed
     art_style = models.CharField(max_length=64)
+
+    score=models.FloatField(default=0.5)
     
     source_quality = models.CharField(choices=QualityClassification.choices())
     content_type = models.CharField(max_length=64)

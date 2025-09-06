@@ -1,20 +1,21 @@
 from datetime import datetime, time, timedelta
 from zoneinfo import ZoneInfo
 from dashboard.models.calendar import CalendarOccurrence
-from dashboard.constants import LOCAL_TZ
+
 from ics import Calendar, Event
 import requests
 from django.utils import timezone
 import arrow
 from typing import Iterable
 
-def _day_bounds(dt_local):
-    start = datetime.combine(dt_local.date(), time(0,0,0, tzinfo=LOCAL_TZ))
+
+def _day_bounds(dt_local: datetime):
+    start = datetime.combine(dt_local.date(), time(0,0,0))
     end = start + timedelta(days=1)
     return start, end
 
 def today_events():
-    now = datetime.now(LOCAL_TZ)
+    now = timezone.now()
     start_local, end_local = _day_bounds(now)
     start_utc = start_local.astimezone(ZoneInfo("UTC"))
     end_utc = end_local.astimezone(ZoneInfo("UTC"))
@@ -26,7 +27,7 @@ def today_events():
     return list(qs)
 
 def next_7_days():
-    now = datetime.now(LOCAL_TZ)
+    now = timezone.now()
     start_local, _ = _day_bounds(now)  # midnight today
     end_local = start_local + timedelta(days=7)
     start_utc = start_local.astimezone(ZoneInfo("UTC"))

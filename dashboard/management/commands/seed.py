@@ -1,16 +1,17 @@
 from __future__ import annotations
-
+from django.conf import settings
 from django.core.management.base import BaseCommand
 from django.db import transaction
-
 from dashboard.models.job import Job 
 from dashboard.models.weather import Location
 from dashboard.models.calendar import CalendarSource
 from dashboard.models.art import Artstyle, ContentType, ArtstyleContentType
 from dashboard.constants import JobType
-from dashboard.constants import LOCAL_TZ, ICAL_GOOGLE_CALENDAR_URL
+from dashboard.constants import ICAL_GOOGLE_CALENDAR_URL
 
 from pathlib import Path
+
+TIME_ZONE = getattr(settings, "TIME_ZONE", 'Europe/Brussels')
 
 
 class Command(BaseCommand):
@@ -93,7 +94,7 @@ class Command(BaseCommand):
             {
                 "name": "Default calendar",
                 "ics_url": ICAL_GOOGLE_CALENDAR_URL,
-                "timezone": LOCAL_TZ,
+                "timezone": TIME_ZONE,
             }
         ]
 

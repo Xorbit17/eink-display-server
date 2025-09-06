@@ -1,5 +1,7 @@
 from django.views import View
-from dashboard.services.select_image import get_variant
+from dashboard.services.scoring import select_variant
+from dashboard.models.photos import Variant
+
 from django.http import FileResponse, Http404
 import os
 import mimetypes
@@ -11,7 +13,7 @@ class PhotoView(View):
         Returns one image (as raw bytes) chosen by final score.
         """
         try:
-            chosen = get_variant()
+            chosen = select_variant(list(Variant.objects.all()))
         except Exception:
             raise Http404("Failed to select an image.")
 
@@ -23,6 +25,6 @@ class PhotoView(View):
         ctype = ctype or "application/octet-stream"
 
         resp = FileResponse(open(path, "rb"), content_type=ctype)
-        # Dynamic content; avoid caching on the client/display unless you want it
+        # Dynamic content; avoid caching on the display
         resp["Cache-Control"] = "no-store"
         return resp

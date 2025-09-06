@@ -1,4 +1,4 @@
-from zoneinfo import ZoneInfo
+import os
 from typing import Dict
 from pathlib import Path
 from enum import Enum, IntEnum
@@ -24,21 +24,28 @@ def parse_env_file(path: str | Path) -> Dict[str, str]:
     return env
 
 
-LOCAL_TZ = ZoneInfo("Europe/Brussels")
+
 APP_DIR = Path(__file__).resolve().parents[0]  # app; a.k.a. the current django app 'dashboard'
 PROJECT_DIR = APP_DIR.parents[0]  # server; a.k.a the django root
-
-ENV_PATH = PROJECT_DIR / ".env.server"
-SECRETS = parse_env_file(ENV_PATH)
-
-IMAGE_DIR = Path(SECRETS["IMAGE_DIR"])
-ICAL_GOOGLE_CALENDAR_URL = SECRETS["ICAL_GOOGLE_CALENDAR_URL"]
-OPENAI_KEY = SECRETS["OPENAI_KEY"]
-OPENWEATHERMAP_KEY = SECRETS["OPENWEATHERMAP_KEY"]
 OPENAI_PORTRAIT_SIZE= "1024x1536"
 OPENAI_SQUARE_SIZE= "1024x1024"
 OPENAI_LANDSCAPE_SIZE= "1536x1024"
+
+ENV_PATH = PROJECT_DIR / ".env.server"
+SECRETS = parse_env_file(ENV_PATH)
+ICAL_GOOGLE_CALENDAR_URL = SECRETS["ICAL_GOOGLE_CALENDAR_URL"] # Refactor to allow multiple calendar sources. New Model 'CalendarSource' already created
+
+SOURCE_IMAGE_DIR = Path(SECRETS["SOURCE_IMAGE_DIR"]) # Will refactor for default when running in docker
+GENERATE_IMAGE_DIR = SOURCE_IMAGE_DIR / "artifacts"
+DISCOVERY_PORT = int(os.getenv("DISCOVERY_PORT", 51234))
+
+
+OPENAI_KEY = SECRETS["OPENAI_KEY"]
+OPENWEATHERMAP_KEY = SECRETS["OPENWEATHERMAP_KEY"]
+
 IMAGE_ART_GENERATION_MODEL="gpt-5"
+IMAGE_CLASSIFICATION_MODEL="gpt-5"
+
 
 class LabeledEnum(str, Enum):
     """

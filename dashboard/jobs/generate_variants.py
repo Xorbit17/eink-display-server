@@ -1,5 +1,5 @@
 from pathlib import Path
-from dashboard.constants import RenderDecision
+from dashboard.constants import RenderDecision, GENERATE_IMAGE_DIR
 from dashboard.jobs.job_registry import job_function
 from dashboard.models.job import Job
 from dashboard.models.photos import SourceImage, Variant
@@ -91,7 +91,7 @@ def generate_variants(
             photorealist=photorealist,
         )
         input = Path(src.path)
-        output_path = input.resolve().parent / "variants" / f"variants_{src.pk}.png"
+        output_path = Path(GENERATE_IMAGE_DIR).resolve() / "variants" / f"variants_{src.pk}.png"
         if art_style == "KEEP_PHOTO":
             pipeline = PHOTO_PIPELINE
         else:

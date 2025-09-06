@@ -1,10 +1,10 @@
-from typing import Dict, Iterable, List
+from typing import Dict, Iterable, List, cast
 from django.utils import timezone
 from datetime import datetime
 from math import exp, log
 from dashboard.constants import QualityClassification, RenderDecision
 from dashboard.models.art import ContentType
-from dashboard.models.photos import SourceImage
+from dashboard.models.photos import SourceImage, Variant
 from dashboard.services.openai_prompting import GenericImageClassification
 import random
 from bisect import bisect
@@ -76,11 +76,11 @@ def calculate_final_score_for_source(
 ) -> float:
     fav_score = FAVORITE_SCORE if source_img.favorite else (1.0 - FAVORITE_SCORE)
 
+    variant_score = 0.3 if source_img.has_variants() else 0.7
+
     now = timezone.now()
     age_seconds = max((now - source_img.created_at).total_seconds(), 0.0)
     age_days = age_seconds / 86400.0
-
-    variant_score = 0.3 if source_img.has_variants() else 0.7
 
     # Exponential decay to a floor: 1 at t=0, approaches NOVELTY_FLOOR as t grows.
     decay = exp(-log(2) * (age_days / max(NOVELTY_HALF_LIFE_DAYS, 1e-6)))
@@ -91,10 +91,10 @@ def calculate_final_score_for_source(
     # We give "static" an implicit base weight of 1.0 so we only tune the extras.
     return weighted_geometric_mean(scores,factors)
 
-def select_random_sources(items: list[SourceImage], max_to_select: int) -> list[SourceImage]:
+def select_random_sources(sources: list[SourceImage], max_to_select: int) -> list[SourceImage]:
     pick_list = [
         {"source": s, "score": max(0.0, float(calculate_final_score_for_source(s) or 0.0))}
-        for s in items
+        for s in sources
     ]
     weights = [x["score"] for x in pick_list]
     n = min(len(pick_list), max_to_select)
@@ -105,4 +105,35 @@ def select_random_sources(items: list[SourceImage], max_to_select: int) -> list[
     chosen = random.choices(pick_list, weights=weights, k=n)
     return [c["source"] for c in chosen]
 
-# TODO select variant based on novelty etc
+
+def calculate_final_score_for_variant(
+    variant: Variant,
+) -> float:
+    fav_score = FAVORITE_SCORE if variant.favorite else (1.0 - FAVORITE_SCORE)
+    source_img = cast(SourceImage, variant.source_image)
+    source_fav_score = FAVORITE_SCORE if source_img.favorite else (1.0 - FAVORITE_SCORE)
+    has_variant_score = 0.3 if source_img.has_variants() else 0.7
+
+    now = timezone.now()
+    age_seconds = max((now - variant.created_at).total_seconds(), 0.0)
+    age_days = age_seconds / 86400.0
+
+    decay = exp(-log(2) * (age_days / max(NOVELTY_HALF_LIFE_DAYS, 1e-6)))
+    novelty_score = NOVELTY_FLOOR + (1.0 - NOVELTY_FLOOR) * decay
+    scores = [source_fav_score, fav_score, clamp(source_img.score),clamp(variant.score), novelty_score, has_variant_score ]
+    factors = [0.8, 0.8, 0.8, 1.0,1.2]
+
+    return weighted_geometric_mean(scores,factors)
+
+def select_variant(variants: list[Variant]) -> Variant:
+    pick_list = [
+        {
+        "variant": v, 
+         "score": clamp(calculate_final_score_for_variant(v))
+         } for v in variants
+    ]
+    weights = [x["score"] for x in pick_list]
+
+
+    return random.choices(pick_list, weights=weights, k=1)[0]["variant"]
+

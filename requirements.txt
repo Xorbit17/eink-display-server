@@ -1,5 +1,6 @@
 django
 gunicorn
+django-solo
 djangorestframework
 httpx
 python-dateutil
@@ -12,3 +13,4 @@ psutil
 docker
 requests
 ics
+

@@ -146,7 +146,6 @@ if not ENV:
 
 DEBUG = ENV == "development"
 
-DISCOVERY_PORT = int(os.getenv("DISCOVERY_PORT", 51234))
 PUBLIC_BASE_URL = os.getenv("PUBLIC_BASE_URL", "http://localhost:8000")
 
 ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS", "localhost,127.0.0.1").split(",")

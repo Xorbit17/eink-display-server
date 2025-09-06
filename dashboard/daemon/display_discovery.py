@@ -1,11 +1,11 @@
-
 from django.conf import settings
 import asyncio
 import json
 import socket
+from dashboard.constants import DISCOVERY_PORT
 
-DISCOVERY_PORT = getattr(settings, "DISCOVERY_PORT", 51234)
 PUBLIC_BASE_URL = getattr(settings, "PUBLIC_BASE_URL", "http://localhost:8000")
+
 
 async def udp_discovery_server_task():
     """
@@ -24,8 +24,6 @@ async def udp_discovery_server_task():
         while True:
             data, addr = await loop.sock_recvfrom(sock, 4096)
             if data.strip() == b"EINK_DISCOVER":
-                await loop.sock_sendto(
-                    sock, json.dumps(reply).encode("utf-8"), addr
-                )
+                await loop.sock_sendto(sock, json.dumps(reply).encode("utf-8"), addr)
     finally:
         sock.close()

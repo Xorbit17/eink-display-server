@@ -1,6 +1,6 @@
 from dashboard.jobs.job_registry import job_function
 from dashboard.constants import (
-    IMAGE_DIR,
+    GENERATE_IMAGE_DIR,
 )
 from pathlib import Path
 from dashboard.models.job import Job
@@ -29,7 +29,7 @@ def generate_dashboard(job: Job, logger: JobLogger, **kwargs):
 
     logger.info("Generating dashboard")
     out_path = (
-        Path(IMAGE_DIR).resolve()
+        Path(GENERATE_IMAGE_DIR).resolve()
         / "dashboards"
         / f"last_dashboard-{now.strftime('%Y%m%d')}.png"
     )

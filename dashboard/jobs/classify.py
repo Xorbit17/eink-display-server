@@ -9,11 +9,11 @@ from dashboard.models.photos import SourceImage
 from dashboard.services.logger_job import JobLogger
 from dashboard.services.scoring import calculate_static_score_for_source
 from dashboard.constants import (
-    IMAGE_DIR,
+    SOURCE_IMAGE_DIR,
     IMAGE_EXTENSIONS,
 )
 from dashboard.services.classify_image import classify_image
-from dashboard.jobs.job_registry import job_function, JobErrorException
+from dashboard.jobs.job_registry import job_function
 from PIL import Image
 from pydantic import BaseModel
 from typing import Optional
@@ -21,15 +21,15 @@ import json
 
 
 def find_files() -> set[str]:
-    """Return absolute paths of images in IMAGE_DIR (no subdirs)."""
+    """Return absolute paths of images in SOURCE_IMAGE_DIR (no subdirs)."""
     try:
-        entries = os.listdir(IMAGE_DIR)
+        entries = os.listdir(SOURCE_IMAGE_DIR)
     except FileNotFoundError:
         return set()
 
     files = set()
     for f in entries:
-        full = os.path.join(IMAGE_DIR, f)
+        full = os.path.join(SOURCE_IMAGE_DIR, f)
         if os.path.isfile(full) and os.path.splitext(f)[1].lower() in IMAGE_EXTENSIONS:
             files.add(full)
     return files
@@ -47,7 +47,7 @@ def classify_new_image(path: str | Path, logger: JobLogger, params: dict | None)
         path=str(path),
         defaults={
             "classification": classification,
-            "score": calculate_static_score_for_source(classification)
+            "score": calculate_static_score_for_source(classification),
         },
     )
     logger.info(
@@ -60,7 +60,9 @@ class ClassifyParams(BaseModel):
 
 
 @job_function("classify", ClassifyParams)
-def classify_images(job: Job, logger: JobLogger, *, max_num_to_classify: Optional[int], **kwargs):
+def classify_images(
+    job: Job, logger: JobLogger, *, max_num_to_classify: Optional[int], **kwargs
+):
     if max_num_to_classify and max_num_to_classify <= 0:
         logger.warn("Nothing to do: max_num_to_generate <= 0")
         return
