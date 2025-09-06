@@ -1,10 +1,10 @@
-from django.conf import settings
+import django.conf
 import asyncio
 import json
 import socket
-from dashboard.constants import DISCOVERY_PORT
+from dashboard.services.app_settings import settings
 
-PUBLIC_BASE_URL = getattr(settings, "PUBLIC_BASE_URL", "http://localhost:8000")
+PUBLIC_BASE_URL = getattr(django.conf.settings, "PUBLIC_BASE_URL", "http://localhost:8000")
 
 
 async def udp_discovery_server_task():
@@ -19,7 +19,7 @@ async def udp_discovery_server_task():
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     try:
-        sock.bind(("", DISCOVERY_PORT))
+        sock.bind(("", settings().discovery_port))
         sock.setblocking(False)
         while True:
             data, addr = await loop.sock_recvfrom(sock, 4096)

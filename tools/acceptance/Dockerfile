@@ -19,11 +19,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 WORKDIR /app
 
-# Copy requirements to leverage layer caching
-COPY requirements.txt /app/requirements.txt
+COPY pyproject.toml /app/pyproject.toml
 
-RUN python -m pip install --upgrade pip wheel \
- && pip wheel --wheel-dir /wheels -r /app/requirements.txt
+RUN pip install --upgrade pip setuptools wheel
 
 FROM python:3.11-slim-bookworm AS runtime
 
@@ -37,7 +35,8 @@ ENV PIP_NO_CACHE_DIR=1 \
     PYTHONUNBUFFERED=1 \
     GUNICORN_WORKERS=2 \
     GUNICORN_THREADS=2 \
-    GUNICORN_TIMEOUT=60
+    GUNICORN_TIMEOUT=60 \
+    IN_DOCKER=True
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
     libjpeg62-turbo \
@@ -50,11 +49,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libheif1 \
     curl \
     && rm -rf /var/lib/apt/lists/*
-
-RUN if [ "$PLAYWRIGHT" = "1" ]; then \
-      pip install --no-cache-dir playwright && \
-      python -m playwright install --with-deps chromium; \
-    fi
 
 RUN groupadd -g "${APP_GID}" "${APP_USER}" \
  && useradd --no-log-init -m -u "${APP_UID}" -g "${APP_GID}" -s /bin/bash "${APP_USER}"

@@ -4,6 +4,7 @@ from .photos import SourceImage, Variant
 from .schedule import Display
 from .weather import Location, WeatherDetail, DayForecast
 from .art import Artstyle, ContentType
+from .app_settings import AppSettings
 
 __all__ = [
     "MinuteSystemSample",
@@ -18,4 +19,5 @@ __all__ = [
     "DayForecast",
     "Artstyle",
     "ContentType",
+    "AppSettings",
 ]

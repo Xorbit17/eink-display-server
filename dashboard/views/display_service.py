@@ -14,13 +14,14 @@ from dashboard.models.schedule import Display
 from pathlib import Path
 from dashboard.models.application import PrerenderedDashboard
 from dashboard.models.schedule import WeeklyRule
+from dashboard.models.photos import Variant
 from dashboard.constants import Mode
-from dashboard.services.select_image import get_variant
 from dashboard.services.display import create_new_display
 from dashboard.services.render_page import (
     render_png,
     run_eink_pipeline_for_page_in_memory,
 )
+from dashboard.services.scoring import select_variant
 from pydantic import BaseModel, ValidationError, Field
 from typing import Literal, Annotated, TypeAlias
 from dataclasses import dataclass, asdict
@@ -161,7 +162,7 @@ class DisplayVariantView(APIView):
         display.last_seen = now
         display.save(update_fields=["last_seen"])
         try:
-            variant = get_variant()
+            variant = select_variant(list(Variant.objects.all()))
         except Exception:
             return HttpResponseServerError(
                 "No variants have been generated. Is the variant creation job running and are source present?"
@@ -191,7 +192,7 @@ class DisplayBootScreenView(APIView):
         )  # TODO remove hardcoded value. Relative URL
         buffer = io.BytesIO(png)
         buffer.seek(0)
-        out_buffer = run_eink_pipeline_for_page_in_memory(buffer.getvalue())
+        out_buffer = run_eink_pipeline_for_page_in_memory(buffer)
         response = FileResponse(out_buffer, content_type="image/png")
         response["Cache-Control"] = "no-store"
         return response

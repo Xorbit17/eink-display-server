@@ -1,5 +1,5 @@
 from datetime import timedelta, datetime
-from dashboard.constants import RUNNING, QUEUED, CRON
+from dashboard.constants import JobStatus, JobType
 
 from django.db import transaction, close_old_connections
 from django.db.models import Exists, OuterRef, Q
@@ -11,7 +11,7 @@ from dashboard.jobs.job_registry import run_execution
 from .time_util import sleep_until_next_minute
 import asyncio
 
-ACTIVE_STATUSES = [RUNNING, QUEUED]
+ACTIVE_STATUSES = [JobStatus.RUNNING, JobStatus.QUEUED]
 
 def _cron_due_this_minute(expr: str, now: datetime) -> bool:
     """True if cron expr fires at 'now' (minute precision)."""
@@ -29,7 +29,7 @@ def find_eligible_jobs(now: datetime) -> list[Job]:
 
     qs = (
         Job.objects
-        .filter(cron__isnull=False, enabled=True, job_type=CRON)
+        .filter(cron__isnull=False, enabled=True, job_type=JobType.CRON)
         .filter(Q(last_run_finished_at__isnull=True) | Q(last_run_finished_at__lt=base_minute))
         .annotate(active_exists=Exists(active_execs))
         .filter(active_exists=False)  # push to SQL
@@ -65,7 +65,7 @@ def queue_due_jobs(now: datetime):
             if not already_running and not finished_this_minute:
                 Execution.objects.create(
                     job=job,
-                    status=QUEUED,
+                    status=JobStatus.QUEUED,
                     params=job.params or {},
                 )
 
@@ -80,7 +80,7 @@ async def job_execution_task():
                 queue_due_jobs(minute_start)
 
                 # Single-runner policy: if anything is RUNNING, skip this minute
-                if Execution.objects.filter(status=RUNNING).exists():
+                if Execution.objects.filter(status=JobStatus.RUNNING).exists():
                     print("A job is still running; try again next minute.")
                     return
 
@@ -90,14 +90,14 @@ async def job_execution_task():
                         Execution.objects
                         .select_related("job")
                         .select_for_update(skip_locked=True)
-                        .filter(status=QUEUED)
+                        .filter(status=JobStatus.QUEUED)
                         .order_by("created_at")
                     )
                     executions = list(qs)
                     # Mark RUNNING inside txn so others can't claim them
                     now = timezone.now()
                     for e in executions:
-                        e.status = RUNNING
+                        e.status = JobStatus.RUNNING
                         e.started_at = now
                         e.save(update_fields=["status", "started_at"])
 
@@ -108,7 +108,7 @@ async def job_execution_task():
                     except Exception as err:
                         # Defensive fallback if run_execution didn’t catch
                         Execution.objects.filter(pk=e.pk).update(
-                            status="FAILED",
+                            status=JobStatus.ERROR,
                             finished_at=timezone.now(),
                             error=str(err)[:1000],
                         )

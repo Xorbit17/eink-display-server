@@ -5,19 +5,14 @@ from dashboard.models.weather import Location, WeatherDetail, DayForecast
 from dashboard.models.application import MinuteSystemSample, PrerenderedDashboard
 from dashboard.models.calendar import CalendarSource, CalendarOccurrence
 from dashboard.models.schedule import Display, WeeklyRule
+from solo.admin import SingletonModelAdmin
+from .models.app_settings import AppSettings
 
 @admin.register(SourceImage)
 class SourceImageAdmin(admin.ModelAdmin):
-    list_display = [f.name for f in SourceImage._meta.fields] + ["variant_count"]
-    list_filter = ("has_variants",)
+    list_display = [f.name for f in SourceImage._meta.fields]
     search_fields = ("path",)
     readonly_fields = ("created_at", "updated_at")
-
-
-    def variant_count(self, obj: SourceImage):
-        return Variant.objects.filter(source_image=obj).count()
-    
-
 
 @admin.register(Variant)
 class RenderedAssetAdmin(admin.ModelAdmin):
@@ -94,3 +89,6 @@ class WeeklyRuleAdmin(admin.ModelAdmin):
     list_display = [f.name for f in WeeklyRule._meta.fields]
     readonly_fields = ("created_at", "updated_at")
 
+@admin.register(AppSettings)
+class AppSettingsAdmin(SingletonModelAdmin):
+    pass

@@ -1,0 +1,50 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+ENV_FILE="${ENV_FILE:-tools/development/.env.dev}"
+COMPOSE_FILE="tools/development/docker-compose.yml"
+
+usage() {
+  echo "Usage: ./dev [--start-fresh] [--env <file>]"
+  echo "  --start-fresh   Stop and remove containers + volumes, then rebuild & start"
+  echo "  --env <file>    Use a different env file (default: $ENV_FILE)"
+  exit 1
+}
+
+START_FRESH=0
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --start-fresh) START_FRESH=1; shift ;;
+    --env) ENV_FILE="$2"; shift 2 ;;
+    -h|--help) usage ;;
+    *) echo "Unknown arg: $1"; usage ;;
+  esac
+done
+
+# run from repo root
+cd "$(dirname "$0")"
+
+if [[ $START_FRESH -eq 1 ]]; then
+  echo "▶ Fresh start requested: removing DB volume…"
+  docker compose --env-file "$ENV_FILE" -f "$COMPOSE_FILE" down
+  rm -Rf ./tools/development/volumes/postgres
+  
+  echo "▶ Rebuilding image and starting container for migration reset…"
+  docker compose --env-file "$ENV_FILE" -f "$COMPOSE_FILE" build
+
+  # Run reset commands inside a one-off container
+  docker compose --env-file "$ENV_FILE" -f "$COMPOSE_FILE" run --rm app bash -lc '
+    find dashboard/migrations -type f ! -name "__init__.py" -delete
+    python manage.py makemigrations dashboard
+    python manage.py migrate --noinput
+    echo "from django.contrib.auth import get_user_model; \
+User = get_user_model(); \
+User.objects.filter(username=\"${ADMIN_USERNAME}\").exists() or \
+User.objects.create_superuser(\"${ADMIN_USERNAME}\", \"${ADMIN_EMAIL}\", \"${ADMIN_PASSWORD}\")" \
+      | python manage.py shell
+    python manage.py seed
+  '
+fi
+
+echo "▶ Starting dev stack with $ENV_FILE"
+docker compose --env-file "$ENV_FILE" -f "$COMPOSE_FILE" up --build 

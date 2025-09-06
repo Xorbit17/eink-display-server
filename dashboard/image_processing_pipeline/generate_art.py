@@ -14,19 +14,21 @@ from dashboard.services.openai_prompting import (
 
 ART_GENERATOR_PROMPT_TEMPLATE = (
     Path(__file__).resolve().parent.parent
-    / "context_templates"
+    / "context-templates"
     / "image-artstyle-applicator.md"
 ).read_text()
 
 
 class OpenAiProcessParameters(BaseModel):
-    artstyle: Artstyle
+    artstyle: str
 
 
 @pipeline_function("openai_filter")
 def openai_process(
-    image: Image.Image, context: ImageProcessingContext, /, artstyle: Artstyle
+    image: Image.Image, context: ImageProcessingContext, /, artstyle: str
 ) -> Image.Image:
+    if not openai_client:
+        raise Exception("OpenAI key not provided")
     if not context.classification:
         raise Exception("Context does not contain classification")
     has_alpha = image.mode in ("RGBA", "LA", "P") and (
@@ -40,12 +42,13 @@ def openai_process(
         raise Exception(
             f"Content type '{context.classification.contentType}' not found in database"
         )
+    artstyle_record = Artstyle.objects.get(name=artstyle)
     prompt_context = Context(
         {
             "content_type": content_type.name,
             "content_type_prompt": content_type.generator_prompt,
-            "artstyle": artstyle.name,
-            "artstyle_prompt": artstyle.generator_prompt,
+            "artstyle": artstyle_record.name,
+            "artstyle_prompt": artstyle_record.generator_prompt,
         }
     )
     prompt = render_md_prompt(ART_GENERATOR_PROMPT_TEMPLATE, prompt_context)

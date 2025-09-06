@@ -1,0 +1,47 @@
+# docker-compose.acc.yml
+version: "3.9"
+
+services:
+  db:
+    image: postgres:16
+    container_name: eds_acc_db
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - eds_pgdata_acc:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  app:
+    build: .
+    container_name: eds_acc_app
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DJANGO_DEBUG: "0"
+      APP_RUNTIME: "docker"
+      DJANGO_SECRET_KEY: "${DJANGO_SECRET_KEY}"
+      DJANGO_ALLOWED_HOSTS: "${DJANGO_ALLOWED_HOSTS:-localhost,127.0.0.1}"
+      DATABASE_URL: "postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}"
+      # Optionally bootstrap admin/API keys from env
+      ADMIN_USERNAME: "${ADMIN_USERNAME:-}"
+      ADMIN_PASSWORD: "${ADMIN_PASSWORD:-}"
+      ADMIN_EMAIL: "${ADMIN_EMAIL:-}"
+      OPENAI_API_KEY: "${OPENAI_API_KEY:-}"
+      OPENWEATHERMAP_API_KEY: "${OPENWEATHERMAP_API_KEY:-}"
+      DISCOVERY_PORT: "${DISCOVERY_PORT:-51234}"
+    volumes:
+      - ./input:/app/input
+      - ./generate:/app/generate
+    ports:
+      - "8000:8000"
+    command: ["/usr/local/bin/start.sh"]
+
+volumes:
+  eds_pgdata_acc:

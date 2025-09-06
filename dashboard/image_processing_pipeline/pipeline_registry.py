@@ -149,9 +149,11 @@ def process(
     output_format: ImageProcessingOutputEnum | None = None,
     output_path: Path | None = None,
     classification: GenericImageClassification | None = None,
-    logger: BaseLogger,
-) -> BytesIO | Path:
+    logger: BaseLogger | None = None,
+):
     image=default_to_image(input)
+    if not logger:
+        logger = ConsoleLogger()
     if output_format == ImageProcessingOutputEnum.FILE and not output_path:
         raise BadPipelineArgumentsException(
             "When output type is FILE keyword arg output_path must be provided"

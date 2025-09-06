@@ -1,10 +1,10 @@
 from __future__ import annotations
+from dashboard.services.app_settings import settings
 from dashboard.jobs.job_registry import JobErrorException
 from dashboard.services.openai import openai_client
 from dashboard.constants import (
     IMAGE_EXTENSIONS,
     MIME_BY_EXT,
-    IMAGE_CLASSIFICATION_MODEL,
 )
 from dashboard.services.image_processing import file_to_base64
 from pathlib import Path
@@ -18,7 +18,7 @@ from dashboard.services.openai_prompting import (
 )
 
 CLASSIFY_PROMPT_TEMPLATE = (
-    Path(__file__).resolve().parent.parent / "context_templates" / "image-classifier.md"
+    Path(__file__).resolve().parent.parent / "context-templates" / "image-classifier.md"
 ).read_text()
 
 
@@ -27,6 +27,8 @@ def classify_image(path: str | Path) -> GenericImageClassification:
     Upload an image and ask OpenAI to classify its suitability for e-ink portrait generation.
     Returns the model's text response.
     """
+    if not openai_client:
+        raise Exception("OpenAI key not provided")
     p = Path(path)
     ext = p.suffix.lower()
     if ext not in IMAGE_EXTENSIONS:
@@ -40,7 +42,7 @@ def classify_image(path: str | Path) -> GenericImageClassification:
     text_format = get_classification_model()
 
     response = openai_client.responses.parse(
-        model=IMAGE_CLASSIFICATION_MODEL,
+        model=settings().image_classification_model,
         text_format=text_format,
         input=[
             {

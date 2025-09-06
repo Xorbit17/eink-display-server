@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 
 from pathlib import Path
 import os
+from urllib.parse import urlparse
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -34,6 +35,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',
     "rest_framework.authtoken",
+    "solo.apps.SoloAppConfig",
     'dashboard',
 ]
 
@@ -144,9 +146,37 @@ ENV = os.getenv("ENV", "development")  # dev|staging|production
 if not ENV:
     ENV = "development"
 
-DEBUG = ENV == "development"
+if ENV == 'development':
+    DEBUG = ENV == "development"
+else:
+    DEBUG = os.getenv("DJANGO_DEBUG", "0") == "1" or os.getenv("DJANGO_DEBUG", "0").lower() == "true"
 
 PUBLIC_BASE_URL = os.getenv("PUBLIC_BASE_URL", "http://localhost:8000")
 
 ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS", "localhost,127.0.0.1").split(",")
 CSRF_TRUSTED_ORIGINS = [PUBLIC_BASE_URL] if PUBLIC_BASE_URL.startswith("https") else []
+
+DATABASE_URL = os.getenv("DATABASE_URL")
+
+if DATABASE_URL:
+    parsed = urlparse(DATABASE_URL)
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.postgresql",
+            "NAME": (parsed.path or "/")[1:],  # strip leading slash
+            "USER": parsed.username or "",
+            "PASSWORD": parsed.password or "",
+            "HOST": parsed.hostname or "db",
+            "PORT": parsed.port or 5432,
+            # Connection tuning:
+            "CONN_MAX_AGE": 600,     # keep connections open for 10 minutes
+            "ATOMIC_REQUESTS": True, # wrap each request in a transaction
+        }
+    }
+else:
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.sqlite3",
+            "NAME": BASE_DIR / "db.sqlite3",
+        }
+    }

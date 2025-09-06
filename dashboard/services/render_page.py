@@ -1,8 +1,8 @@
 from playwright.sync_api import sync_playwright
-from dashboard.image_processing_pipeline.generate_art import run_art_generation_pipeline, ImageProcessingContext
-from dashboard.image_processing_pipeline.generate_art import ConsoleLogger
-from dashboard.color_constants import EXTENDED_PALETTE_SET
 from typing import cast
+from dashboard.image_processing_pipeline.pipeline_registry import process, ImageProcessingPipelineStep
+from dashboard.color_constants import PaletteEnum
+from io import BytesIO
 
 DEFAULT_W = 1200
 DEFAULT_H = 1600
@@ -44,12 +44,13 @@ def render_png(url: str,*, width=DEFAULT_W, height=DEFAULT_H,
         browser.close()
         return png_bytes
     
-def run_eink_pipeline_for_page_in_memory(png_bytes: bytes)-> bytes:
-    ctx: ImageProcessingContext = ImageProcessingContext(
-        logger=ConsoleLogger(),
-        pipeline=["quantize_to_palette","output_bytes"],
-        pipeline_args=[(EXTENDED_PALETTE_SET,),("png",)],
-    )
-    return cast(bytes,run_art_generation_pipeline(png_bytes, context=ctx))
+def run_eink_pipeline_for_page_in_memory(png_bytes: BytesIO)-> BytesIO:
+    return process(
+        png_bytes,
+        [
+            ImageProcessingPipelineStep("quantize",palette=PaletteEnum.EXTENDED)
+        ],
+        ) # type: ignore
+
 
     

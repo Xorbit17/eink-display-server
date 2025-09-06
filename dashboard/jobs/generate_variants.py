@@ -1,6 +1,7 @@
 from pathlib import Path
-from dashboard.constants import RenderDecision, GENERATE_IMAGE_DIR
+from dashboard.constants import RenderDecision
 from dashboard.jobs.job_registry import job_function
+from dashboard.services.app_settings import settings
 from dashboard.models.job import Job
 from dashboard.models.photos import SourceImage, Variant
 from dashboard.models.art import (
@@ -24,8 +25,6 @@ from typing import cast
 from dashboard.services.scoring import select_random_sources
 from dashboard.server_types import PrefixedLogger
 
-
-# TODO: Refactor to use new database powered art styles and new pipeline system
 def decide_art_style(classification: GenericImageClassification) -> ArtStyleType:
     if classification.renderDecision == RenderDecision.LEAVE_PHOTO:
         return "KEEP_PHOTO"
@@ -91,7 +90,7 @@ def generate_variants(
             photorealist=photorealist,
         )
         input = Path(src.path)
-        output_path = Path(GENERATE_IMAGE_DIR).resolve() / "variants" / f"variants_{src.pk}.png"
+        output_path = Path(settings().generate_image_dir).resolve() / "variants" / f"variants_{src.pk}.png"
         if art_style == "KEEP_PHOTO":
             pipeline = PHOTO_PIPELINE
         else:

@@ -1,10 +1,9 @@
 import re
 import requests
 
-from dashboard.constants import OPENWEATHERMAP_KEY
+from dashboard.services.app_settings import settings
 from typing import List, Optional, Iterable, Tuple
 from pydantic import BaseModel, ValidationError
-
 
 class WeatherItem(BaseModel):
     id: int
@@ -158,7 +157,9 @@ def fetch_weather(
 
 def get_weather(location: Tuple[str,str]):
     lat,lon = convert_lat_lon(*location)
-    api_key = OPENWEATHERMAP_KEY
+    api_key = settings().openweathermap_key
+    if not api_key:
+        raise RuntimeError("Openweathermap key not provided")
     return fetch_weather(lat,lon,api_key)
 
 OWM_CODE_TO_ICON = {

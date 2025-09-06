@@ -1,4 +1,6 @@
 from openai import OpenAI
-from dashboard.constants import OPENAI_KEY
+from dashboard.services.app_settings import settings
 
-openai_client = OpenAI(api_key=OPENAI_KEY)
+key = settings().openai_key
+
+openai_client = OpenAI(api_key=key) if key else None

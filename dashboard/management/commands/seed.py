@@ -1,13 +1,14 @@
 from __future__ import annotations
+import os
 from django.conf import settings
 from django.core.management.base import BaseCommand
 from django.db import transaction
+from dashboard.models.app_settings import AppSettings
 from dashboard.models.job import Job 
 from dashboard.models.weather import Location
 from dashboard.models.calendar import CalendarSource
 from dashboard.models.art import Artstyle, ContentType, ArtstyleContentType
 from dashboard.constants import JobType
-from dashboard.constants import ICAL_GOOGLE_CALENDAR_URL
 
 from pathlib import Path
 
@@ -19,17 +20,21 @@ class Command(BaseCommand):
 
     @transaction.atomic
     def handle(self, *args, **options):
-        """
-        Creates or updates a minimal set of cron-based jobs.
-        Runs safely multiple times (idempotent).
-        """
+        appSettings = AppSettings.get_solo()
+        appSettings.source_image_dir = os.environ.get("IMAGE_INPUT_DIR","/app/input")
+        appSettings.generate_image_dir = os.environ.get("GENERATED_OUTPUT_DIR",'/app/generate')
+        appSettings.discovery_port = int(os.environ.get("DISCOVERY_PORT","51234"))
+        appSettings.openai_key=os.environ.get("OPENAI_API_KEY", None)
+        appSettings.openweathermap_key=os.environ.get("OPENWEATHERMAP_API_KEY", None)
+        appSettings.save()
+
         seed_jobs = [
             {
                 "name": "classify-new-images",
                 "job_function_name": "classify",   
                 "job_type": JobType.CRON,
                 "cron": "*/5 * * * *",  # every 5 minutes
-                "enabled": True,
+                "enabled": False,
                 "params": {},
                 "order": 100, # In case other jobs are executed this one goes last
             },
@@ -38,7 +43,7 @@ class Command(BaseCommand):
                 "job_function_name": "generate_variants",
                 "job_type": JobType.CRON,
                 "cron": "0 0 * * *",    # every day at midnight
-                "enabled": True,
+                "enabled": False,
                 "params": {}, # TODO
                 "order": 0,
             },
@@ -47,7 +52,7 @@ class Command(BaseCommand):
                 "job_function_name": "get_weather",
                 "job_type": JobType.CRON,
                 "cron": "55 5 * * *",    # weather and calendar need to be ready at 06:00
-                "enabled": True,
+                "enabled": False,
                 "params": {},
                 "order": 0,
             },
@@ -56,7 +61,7 @@ class Command(BaseCommand):
                 "job_function_name": "get_calendar",
                 "job_type": JobType.CRON,
                 "cron": "55 5 * * *",    # weather and calendar need to be ready at 06:00
-                "enabled": True,
+                "enabled": False,
                 "params": {},
                 "order": 1,
             },
@@ -65,7 +70,7 @@ class Command(BaseCommand):
                 "job_function_name": "generate_dashboard",
                 "job_type": JobType.CRON,
                 "cron": "59 * * * *",    # One minute before the hour. Dashboard needs to be ready at hour change
-                "enabled": True,
+                "enabled": False,
                 "params": {},
             },
             {
@@ -73,7 +78,7 @@ class Command(BaseCommand):
                 "job_function_name": "dummy",
                 "job_type": JobType.CRON,
                 "cron": "* * * * *",    # every minute
-                "enabled": True,
+                "enabled": False,
                 "params": {
                     "message":"Daemon heartbeat"
                 },
@@ -90,15 +95,7 @@ class Command(BaseCommand):
             }
         ]
 
-        seed_calendar_sources = [
-            {
-                "name": "Default calendar",
-                "ics_url": ICAL_GOOGLE_CALENDAR_URL,
-                "timezone": TIME_ZONE,
-            }
-        ]
-
-        subject_types_prompts_path = Path(__file__).resolve().parent.parent / "context-templates" / "content-type"
+        subject_types_prompts_path = Path(__file__).resolve().parent.parent.parent / "context-templates" / "content-type"
 
         seed_content_types = [
             {
@@ -748,23 +745,6 @@ class Command(BaseCommand):
                 updated += 1
                 self.stdout.write(self.style.WARNING(f"Updated Location: {obj.name}"))
 
-
-        for cal in seed_calendar_sources:
-            obj, was_created = CalendarSource.objects.update_or_create(
-                ics_url=cal["ics_url"],
-                defaults={
-                     "name": cal["name"],
-                     "timezone": cal["timezone"]
-                },
-            )
-             
-            if was_created:
-                created += 1
-                self.stdout.write(self.style.SUCCESS(f"Created CalendarSource: {obj.name}"))
-            else:
-                updated += 1
-                self.stdout.write(self.style.WARNING(f"Updated CalendarSource: {obj.name}"))
-
         content_type_cache = {}
         for content_type in seed_content_types:
             obj, was_created = ContentType.objects.update_or_create(
@@ -809,6 +789,8 @@ class Command(BaseCommand):
 
                 created += 1
                 self.stdout.write(self.style.SUCCESS(f"Created ArtstyleContentType: {artstyle.name}-{content_type.name}"))
+
+
 
         self.stdout.write(
             self.style.SUCCESS(f"Seeding complete. Created {created}, Updated {updated}")
