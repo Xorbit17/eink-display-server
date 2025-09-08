@@ -98,8 +98,23 @@ SKINTONES = [
     (96, 70, 60) # Black
     ]
 
+WOOD_COLORS = [
+    (222, 184, 135),  # Pine (light beige-brown with yellow tone)
+    (160, 82, 45),    # Oak (medium warm brown)
+    (38, 26, 26),     # Ebony (very dark brown, almost black)
+]
+
+BLACK_AND_WHITE = [
+    (0,0,0),
+    (255,255,255)
+]
+
 NATIVE_PALETTE = {
     "native": NATIVE_COLORS,
+}
+
+GRAYSCALE_PALETTE = {
+    "grayscale": GREYSCALE_COLORS,
 }
 
 EXTENDED_PALETTE = {
@@ -134,13 +149,27 @@ EXTENDED_NATIVE_SKIN_PALETTE = {
     "skin_tones": SKINTONES,
 }
 
+WOODCUT_PALETTE = {
+    "wood": WOOD_COLORS,
+    "blackAndWhite": BLACK_AND_WHITE,
+}
+
+WOOD_EXTENDED_PALETTE = {
+    "wood": WOOD_COLORS,
+    "native": NATIVE_COLORS,
+    "extended": EXTENDED_COLORS,
+}
+
 class PaletteEnum(LabeledEnum):
     NATIVE = (NATIVE_PALETTE, "Native")
     EXTENDED = (EXTENDED_PALETTE, "Extended")
     SHADED = (SHADED_PALETTE, "Shaded")
     NATIVE_WITH_SKIN = (NATIVE_WITH_SKIN_PALETTE, "Native + Skin Tones")
     EXTENDED_NATIVE_SKIN = (EXTENDED_NATIVE_SKIN_PALETTE, "Extended + Native + Skin Tones")
-
+    GRAYSCALE = (GRAYSCALE_PALETTE, "Grayscale")
+    WOODCUT = (WOODCUT_PALETTE, "Woodcut")
+    WOOD_EXTENDED = (WOOD_EXTENDED_PALETTE, "Wood extended")
+    
     def to_set(self) -> Set[RGB]:
         """Return this palette as a set of RGB tuples."""
         return extract_rgb_set(self.value)

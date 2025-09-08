@@ -45,17 +45,15 @@ def decide_art_style(classification: GenericImageClassification) -> ArtStyleType
 
 
 class GenerateVariantParams(BaseModel):
-    source_image_id: int
     art_style_override: str | None = None
     max_amount: int = 10
 
 
 PHOTO_PIPELINE: ImageProcessingPipeline = [
-    ImageProcessingPipelineStep("resize_crop", resulution=(1200, 1600))
+    ImageProcessingPipelineStep("resize_crop", resolution=(1200, 1600))
 ]
 
-
-@job_function("generate_variant", GenerateVariantParams)
+@job_function("generate_variants", GenerateVariantParams)
 def generate_variants(
     job: Job,
     logger: JobLogger,

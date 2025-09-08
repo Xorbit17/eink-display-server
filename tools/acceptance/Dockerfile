@@ -67,7 +67,7 @@ USER ${APP_USER}
 EXPOSE 8000
 
 # Optional: simple healthcheck (expects /health view; adjust as needed)
-HEALTHCHECK --interval=30s --timeout=3s --retries=5 CMD curl -fsS http://127.0.0.1:8000/health || exit 1
+HEALTHCHECK --interval=30s --timeout=3s --retries=5 CMD curl -fsS http://localhost:8000/health || exit 1
 
 # Use CMD (not ENTRYPOINT) to run the service script
 CMD ["/bin/sh", "-lc", "/app/run-service.sh"]

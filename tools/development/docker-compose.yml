@@ -47,5 +47,6 @@ services:
       - ${GENERATED_OUTPUT_DIR}:/app/generate 
     ports:
       - "8000:8000"
+      - "${DISCOVERY_PORT:-51234}:${DISCOVERY_PORT:-51234}"
     command: ["start.sh"]
 
