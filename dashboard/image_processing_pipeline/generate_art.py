@@ -15,7 +15,7 @@ from dashboard.services.openai_prompting import (
 ART_GENERATOR_PROMPT_TEMPLATE = (
     Path(__file__).resolve().parent.parent
     / "context-templates"
-    / "image-art-style-applicator.md"
+    / "image-artstyle-applicator.md"
 ).read_text()
 
 

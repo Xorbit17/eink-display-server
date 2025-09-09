@@ -191,7 +191,7 @@ class Command(BaseCommand):
                 ImageProcessingPipelineStep("quantize", palette=palette)
             ])
 
-        artstyle_prompt_path = Path(__file__).resolve().parent.parent.parent / "context-templates" / "art_style"
+        artstyle_prompt_path = Path(__file__).resolve().parent.parent.parent / "context-templates" / "artstyle"
 
         seed_art_styles = [
             {
