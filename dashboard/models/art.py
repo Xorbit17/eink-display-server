@@ -20,8 +20,8 @@ ArtStyleType: TypeAlias = str | KEEP_PHOTO
 class Artstyle(models.Model):
     name = models.CharField(max_length=255)
     description = models.TextField()
-    pre_pipeline = models.JSONField(default=dict),
-    post_pipeline = models.JSONField(default=dict),
+    pre_pipeline = models.JSONField(default=dict)
+    post_pipeline = models.JSONField(default=dict)
     generator_prompt = models.TextField()
     score = models.FloatField(default=0.5)
 
@@ -34,6 +34,6 @@ class Artstyle(models.Model):
     
     
 class ArtstyleContentType(models.Model):
-    artstyle=models.ForeignKey(Artstyle, on_delete=models.CASCADE)
+    art_style=models.ForeignKey(Artstyle, on_delete=models.CASCADE)
     content_type=models.ForeignKey(ContentType, on_delete=models.CASCADE)
 

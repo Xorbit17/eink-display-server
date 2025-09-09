@@ -3,7 +3,7 @@ set -euo pipefail
 
 export PYTHONUNBUFFERED=1
 
-DJANGO_CMD="python manage.py runserver localhost:8000"
+DJANGO_CMD="python manage.py runserver 0.0.0.0:8000"
 DAEMON_CMD="python manage.py daemon"
 
 # Trap children properly

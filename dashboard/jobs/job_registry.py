@@ -1,14 +1,15 @@
+from __future__ import annotations
+from importlib import import_module
+import pkgutil
 from typing import Dict, Any, Tuple, Type, Protocol
 from dashboard.constants import JobStatus, JobType
 from dashboard.models.job import Job, Execution
 from django.utils import timezone
-
 from typing import Optional, cast
 from django.db import transaction
 from pydantic import BaseModel
 
 from dashboard.services.logger_job import JobLogger
-
 class JobFunctionNotFoundException(Exception):
     def __init__(self, *args: object) -> None:
         super().__init__(*args)
@@ -34,6 +35,7 @@ class JobFunction(Protocol):
 
 
 _registry: Dict[str, Tuple[JobFunction, Optional[Type[BaseModel]]]] = {}
+_LOADED = False
 
 def job_function(name: str, param_model: Optional[Type[BaseModel]] = None):
     def deco(fn: JobFunction) -> JobFunction:
@@ -52,7 +54,22 @@ def job_function(name: str, param_model: Optional[Type[BaseModel]] = None):
 
     return deco
 
+def _iter_submodules(package: str):
+    pkg = import_module(package)
+    for modinfo in pkgutil.iter_modules(pkg.__path__, package + "."):
+        yield modinfo.name
+        
+def load_all(package: str = "dashboard.jobs") -> None:
+    global _LOADED
+    if _LOADED:
+        return
+    for fullname in _iter_submodules(package):
+        import_module(fullname)  # importing triggers decorators
+    _LOADED = True
+
+# Public API
 def get_job_function_and_model(name: str) -> Tuple[JobFunction, Type[BaseModel] | None]:
+    load_all()
     result = _registry.get(name, None)
     if not result:
         available = ", ".join(sorted(_registry))
@@ -62,9 +79,11 @@ def get_job_function_and_model(name: str) -> Tuple[JobFunction, Type[BaseModel] 
     return result
 
 def get_job_function(name:str) -> JobFunction:
+    load_all()
     return get_job_function_and_model(name)[0]
     
 def test_job_sync(name: str, /, rethrow: bool = False, **kwargs):
+    load_all()
     job = Job.objects.create(
         name="Manually triggered",
         job_function_name=name,
@@ -91,6 +110,7 @@ def test_job_sync(name: str, /, rethrow: bool = False, **kwargs):
 
 @transaction.atomic
 def run_execution(execution: Execution):
+    load_all()
     if not execution.status == JobStatus.RUNNING:
         raise RuntimeError(f"Execution with id {execution.pk} does not have status set to running")
     

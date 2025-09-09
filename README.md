@@ -61,3 +61,10 @@ The project follows a client-server architecture:
     *   Human-readable display IDs.
     *   Bootstrap response includes the display ID, token, and current mode.
 
+# Testing
+
+```
+python manage.py job "classify" --params-json "{\"max_num_to_classify\":1}"
+python manage.py job "generate_variants" --params-json "{\"max_amount\":1}"
+```
+

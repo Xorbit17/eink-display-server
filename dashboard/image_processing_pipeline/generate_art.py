@@ -15,17 +15,17 @@ from dashboard.services.openai_prompting import (
 ART_GENERATOR_PROMPT_TEMPLATE = (
     Path(__file__).resolve().parent.parent
     / "context-templates"
-    / "image-artstyle-applicator.md"
+    / "image-art-style-applicator.md"
 ).read_text()
 
 
 class OpenAiProcessParameters(BaseModel):
-    artstyle: str
+    art_style: str
 
 
 @pipeline_function("openai_filter")
 def openai_process(
-    image: Image.Image, context: ImageProcessingContext, /, artstyle: str
+    image: Image.Image, context: ImageProcessingContext, /, art_style: str
 ) -> Image.Image:
     if not openai_client:
         raise Exception("OpenAI key not provided")
@@ -42,16 +42,17 @@ def openai_process(
         raise Exception(
             f"Content type '{context.classification.contentType}' not found in database"
         )
-    artstyle_record = Artstyle.objects.get(name=artstyle)
+    artstyle_record = Artstyle.objects.get(name=art_style)
     prompt_context = Context(
         {
             "content_type": content_type.name,
             "content_type_prompt": content_type.generator_prompt,
-            "artstyle": artstyle_record.name,
+            "art_style": artstyle_record.name,
             "artstyle_prompt": artstyle_record.generator_prompt,
         }
     )
     prompt = render_md_prompt(ART_GENERATOR_PROMPT_TEMPLATE, prompt_context)
+    context.logger.debug(f"AI generator prompt:\n---\n{prompt}")
     b64 = pil_to_base64(image)
 
     # TODO error handling?

@@ -1,6 +1,6 @@
 from playwright.sync_api import sync_playwright
 from typing import cast
-from dashboard.image_processing_pipeline.pipeline_registry import process, ImageProcessingPipelineStep
+from dashboard.image_processing_pipeline import process, ImageProcessingPipelineStep
 from dashboard.color_constants import PaletteEnum
 from io import BytesIO
 

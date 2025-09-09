@@ -21,13 +21,13 @@ import json
 def find_files() -> set[str]:
     """Return absolute paths of images in settings.source_image_dir (no subdirs)."""
     try:
-        entries = os.listdir(settings().source_image_dir)
+        entries = os.listdir("/app/input")
     except FileNotFoundError:
-        return set()
+        raise RuntimeError("Image source directory does not exist \"/app/input\" in the container)")
 
     files = set()
     for f in entries:
-        full = os.path.join(settings().source_image_dir, f)
+        full = os.path.join("/app/input", f)
         if os.path.isfile(full) and os.path.splitext(f)[1].lower() in IMAGE_EXTENSIONS:
             files.add(full)
     return files
@@ -39,17 +39,17 @@ def is_portrait(path: str) -> bool:
     return h >= w * 1.2  # e.g. portrait if height is at least 20% greater
 
 
-def classify_new_image(path: str | Path, logger: JobLogger, params: dict | None):
-    classification = classify_image(path)
+def classify_new_image(path: str | Path, logger: JobLogger):
+    classification = classify_image(path, logger=logger)
     source_image, _ = SourceImage.objects.get_or_create(
         path=str(path),
         defaults={
-            "classification": classification,
+            "classification": classification.to_dict(),
             "score": calculate_static_score_for_source(classification),
         },
     )
     logger.info(
-        f'Image with path "{path}"\nSource image id:{source_image.pk}\nclassification:\n{json.dumps(classification, indent=4)}'
+        f'Image with path "{path}"\nSource image id:{source_image.pk}\nclassification:\n{json.dumps(classification.to_dict(), indent=4)}'
     )
 
 
@@ -69,6 +69,8 @@ def classify_images(
 
     unprocessed_paths = list(fs_paths - db_paths)
     random.shuffle(unprocessed_paths)
+
+    logger.debug(f"Attempting to classify unprocessed images. max_num_to_classify={max_num_to_classify} len(unprocessed_paths)={len(unprocessed_paths)}\n{',/n'.join(fs_paths)}\n---\n\n{',/n'.join(db_paths)}")
 
     to_process = unprocessed_paths[:max_num_to_classify]
 

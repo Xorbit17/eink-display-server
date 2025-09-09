@@ -1,8 +1,8 @@
 from dashboard.color_constants import PaletteEnum
 from .pipeline_registry import pipeline_function
-from pydantic import BaseModel
+from pydantic import BaseModel, field_validator, field_serializer
 from PIL.Image import Image, new, Dither
-from typing import Set
+from typing import Set, Any
 from dashboard.server_types import RGB
 
 
@@ -20,6 +20,27 @@ def _build_P_mode_palette_image(colors: Set[RGB]) -> Image:
 
 class QuantizeParameters(BaseModel):
     palette: PaletteEnum
+
+    @field_validator("palette", mode="before")
+    @classmethod
+    def coerce_palette(cls, v: Any) -> PaletteEnum:
+        if isinstance(v, PaletteEnum):
+            return v
+        if isinstance(v, str):
+            try:
+                return PaletteEnum[v]
+            except KeyError:
+                # Optional: try by label
+                for m in PaletteEnum:
+                    if getattr(m, "label", m.name).upper() == v:
+                        return m
+        raise ValueError(
+            f"Invalid palette {v!r}. Valid: {[m.name for m in PaletteEnum]}"
+        )
+
+    @field_serializer("palette")
+    def serialize_palette(self, p: PaletteEnum) -> str:
+        return p.name
 
 @pipeline_function("quantize",QuantizeParameters)
 def quantize_to_palette(img, context, *, palette: PaletteEnum) -> Image:

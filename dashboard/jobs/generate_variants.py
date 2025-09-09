@@ -7,6 +7,7 @@ from dashboard.models.photos import SourceImage, Variant
 from dashboard.models.art import (
     Artstyle,
     ArtStyleType,
+    ContentType,
 )
 from dashboard.services.logger_job import JobLogger
 from dashboard.services.openai_prompting import (
@@ -16,14 +17,14 @@ from dashboard.services.openai_prompting import (
 from dashboard.image_processing_pipeline import (
     load_pipeline,
     process,
-    ImageProcessingPipeline,
     ImageProcessingPipelineStep,
 )
 from pydantic import BaseModel
 from random import random, choices
-from typing import cast
+from typing import cast, List
 from dashboard.services.scoring import select_random_sources
 from dashboard.server_types import PrefixedLogger
+
 
 def decide_art_style(classification: GenericImageClassification) -> ArtStyleType:
     if classification.renderDecision == RenderDecision.LEAVE_PHOTO:
@@ -32,9 +33,10 @@ def decide_art_style(classification: GenericImageClassification) -> ArtStyleType
         return "KEEP_PHOTO"
 
     # From this point renderDecision is artify
+    content_type_record=ContentType.objects.get(name=classification.contentType)
     artstyles = list(
         Artstyle.objects.filter(
-            artstylecontenttype__content_type=classification.contentType
+            artstylecontenttype__content_type=content_type_record.pk
         )
     )
     if not artstyles:
@@ -49,9 +51,10 @@ class GenerateVariantParams(BaseModel):
     max_amount: int = 10
 
 
-PHOTO_PIPELINE: ImageProcessingPipeline = [
+PHOTO_PIPELINE: List[ImageProcessingPipelineStep] = [
     ImageProcessingPipelineStep("resize_crop", resolution=(1200, 1600))
 ]
+
 
 @job_function("generate_variants", GenerateVariantParams)
 def generate_variants(
@@ -63,12 +66,13 @@ def generate_variants(
     qs = SourceImage.objects.all()
     selection = select_random_sources(list(qs), max_amount)
     for i, src in enumerate(selection):
-        classification = cast(
-            GenericImageClassification,
-            get_classification_model().model_validate(src.classification),
-        )
+        classification = GenericImageClassification.from_dict(get_classification_model().model_validate(src.classification).model_dump())
 
-        art_style = art_style_override if art_style_override else decide_art_style(classification)
+        art_style = (
+            art_style_override
+            if art_style_override
+            else decide_art_style(classification)
+        )
 
         logger.debug(
             f"Starting generation of variant of source image with id {src.pk} with art style {art_style}"
@@ -84,16 +88,28 @@ def generate_variants(
             source_image=src,
             art_style=art_style,
             source_quality=classification.quality,
-            ContentType=classification.contentType,
+            content_type=classification.contentType,
             photorealist=photorealist,
         )
         input = Path(src.path)
-        output_path = Path(settings().generate_image_dir).resolve() / "variants" / f"variants_{src.pk}.png"
+        output_path = (
+            Path("/app/generate").resolve()
+            / "variants"
+            / f"variants_{src.pk}.png"
+        )
         if art_style == "KEEP_PHOTO":
             pipeline = PHOTO_PIPELINE
         else:
             art_style_record = Artstyle.objects.get(name=art_style)
-            pipeline = load_pipeline(art_style_record.pipeline_definition)
+            pre_pipeline = load_pipeline(art_style_record.pre_pipeline)  # type: ignore
+            post_pipeline = load_pipeline(art_style_record.post_pipeline)  # type: ignore
+
+            pipeline = (
+                pre_pipeline
+                + [ImageProcessingPipelineStep("openai_filter", art_style=art_style)]
+                + post_pipeline
+            )
+
         prefixLogger = PrefixedLogger(
             f"Generating variant nr {i} in {art_style} for source image id {src.pk}:",
             logger,

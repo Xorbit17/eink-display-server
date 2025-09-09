@@ -6,7 +6,7 @@ from dashboard.models.application import PrerenderedDashboard
 from dashboard.services.logger_job import JobLogger
 from django.utils import timezone
 from dashboard.services.render_page import render_png
-from dashboard.image_processing_pipeline.pipeline_registry import (
+from dashboard.image_processing_pipeline import (
     ImageProcessingPipeline,
     ImageProcessingPipelineStep,
     process,
@@ -27,7 +27,7 @@ def generate_dashboard(job: Job, logger: JobLogger, **kwargs):
 
     logger.info("Generating dashboard")
     out_path = (
-        Path(settings().generate_image_dir).resolve()
+        Path("/app/generate").resolve()
         / "dashboards"
         / f"last_dashboard-{now.strftime('%Y%m%d')}.png"
     )

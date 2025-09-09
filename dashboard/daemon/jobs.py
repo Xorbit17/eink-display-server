@@ -7,7 +7,7 @@ from django.utils import timezone
 from croniter import croniter
 
 from dashboard.models.job import Job, Execution
-from dashboard.jobs.job_registry import run_execution
+from dashboard.jobs import run_execution
 from .time_util import sleep_until_next_minute
 import asyncio
 

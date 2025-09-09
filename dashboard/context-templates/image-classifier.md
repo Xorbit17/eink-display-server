@@ -16,8 +16,7 @@ Identify how many people are in the image. If no people just output 0.
 
 You will output a classification depending on the type of content you see in the image. Content types are:
 
-{% for content_type in content_types %}
-  * Key:`{{content_type.name}}`: "{{content_type.classifier_prompt}}"
+{% for content_type in content_types %} * Key:`{{content_type.name}}`: "{{content_type.classifier_prompt}}"
 {% endfor %}
 
 You will output one of the keys in the preceding list depending on the type of content of the image.

@@ -5,6 +5,7 @@ from dashboard.models.weather import Location, WeatherDetail, DayForecast
 from dashboard.models.application import MinuteSystemSample, PrerenderedDashboard
 from dashboard.models.calendar import CalendarSource, CalendarOccurrence
 from dashboard.models.schedule import Display, WeeklyRule
+from dashboard.models.art import Artstyle, ArtstyleContentType, ContentType
 from solo.admin import SingletonModelAdmin
 from .models.app_settings import AppSettings
 
@@ -87,6 +88,20 @@ class DisplayAdmin(admin.ModelAdmin):
 @admin.register(WeeklyRule)
 class WeeklyRuleAdmin(admin.ModelAdmin):
     list_display = [f.name for f in WeeklyRule._meta.fields]
+    readonly_fields = ("created_at", "updated_at")
+
+@admin.register(Artstyle)
+class ArtstyleAdmin(admin.ModelAdmin):
+    list_display = [f.name for f in Artstyle._meta.fields]
+    readonly_fields = ("created_at", "updated_at")
+
+@admin.register(ArtstyleContentType)
+class ArtstyleContentTypeAdmin(admin.ModelAdmin):
+    list_display = [f.name for f in ArtstyleContentType._meta.fields]
+
+@admin.register(ContentType)
+class ContentTypeAdmin(admin.ModelAdmin):
+    list_display = [f.name for f in ContentType._meta.fields]
     readonly_fields = ("created_at", "updated_at")
 
 @admin.register(AppSettings)

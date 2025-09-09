@@ -1,19 +1,15 @@
 from django.core.management.base import BaseCommand, CommandError
-from dashboard.constants import JobKind
-from dashboard.jobs.job_registry import test_job
-
+from dashboard.jobs import test_job_sync
 
 from typing import cast, Dict, Any
 import json
-
-VALID_CHOICES = [member.value for member in JobKind]
 
 class Command(BaseCommand):
     help = "Runs a specific job. First arg is the job job_function_name; named args are job-specific."
 
     def add_arguments(self, parser):
         # positional: restrict to known kinds
-        parser.add_argument("job_kind", choices=VALID_CHOICES)
+        parser.add_argument("job_name")
 
         # repeatable key=value flags, e.g. --param source_image_id=1
         parser.add_argument(
@@ -33,7 +29,8 @@ class Command(BaseCommand):
         )
 
     def handle(self, *args, **options):
-        job_kind = options["job_kind"]
+        job_name = options["job_name"]
+
         params: Dict[str, Any] = {}
         if options.get("params_json"):
             try:
@@ -48,4 +45,6 @@ class Command(BaseCommand):
             key, value = item.split("=", 1)
             params[key] = value
 
-        test_job(cast(JobKind, job_kind), params=params)
+        test_job_sync(job_name,**params)
+
+    

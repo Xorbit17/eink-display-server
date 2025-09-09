@@ -6,17 +6,6 @@ class AppSettings(SingletonModel):
         default=False,
         help_text="True if user completed the wizard"
     )
-    source_image_dir = models.CharField(
-        max_length=512,
-        help_text="Base directory where source images are stored.",
-        default="/app/input"
-    )
-    generate_image_dir = models.CharField(
-        max_length=512,
-        help_text="Directory for generated artifacts.",
-        default="/app/generate"
-    )
-
     discovery_port = models.PositiveIntegerField(
         default=51234,
         help_text="UDP port for device discovery."

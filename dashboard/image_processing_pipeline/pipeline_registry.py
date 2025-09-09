@@ -1,13 +1,17 @@
+from __future__ import annotations
+from importlib import import_module
+import pkgutil
 from enum import Enum
-from typing import Dict, Any, Tuple, Type, Protocol, Iterable, TypeAlias
+from typing import Dict, Any, Tuple, Type, Protocol, Iterable, Mapping, TypeAlias
 from dashboard.server_types import BaseLogger, ConsoleLogger
 from pathlib import Path
 
 from typing import Optional
-from pydantic import BaseModel
+from pydantic import BaseModel, ValidationError
 from PIL.Image import Image, open
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from io import BytesIO
+import json
 
 from dashboard.services.openai_prompting import GenericImageClassification
 
@@ -33,14 +37,57 @@ class ImageProcessingOutputEnum(Enum):
     def pytype(self) -> type: return self.value[1]
 
 
+
+@dataclass(init=False)
 class ImageProcessingPipelineStep:
     name: str
-    kwargs: dict[str, Any]
+    kwargs: dict[str, Any] = field(default_factory=dict)
 
-    def __init__(self,_name,**_kwargs):
-        self.name = _name
-        self.kwargs = _kwargs
+    def __init__(self, name: str, **kwargs: Any):
+        self.name = name
+        self.kwargs = kwargs
 
+    def _param_model(self) -> Optional[Type[BaseModel]]:
+        load_all()
+        _, model = get_pipeline_function_and_model(self.name)
+        return model
+
+    def to_dict(self) -> dict[str, Any]:
+        model = self._param_model()
+        if model is None:
+            return {"name": self.name, **self.kwargs}
+
+        try:
+            m = model.model_validate(self.kwargs)
+        except ValidationError as e:
+            raise ValueError(f"[{self.name}] parameters failed validation: {e}") from e
+
+        params_json = m.model_dump()
+        return {"name": self.name, **params_json}
+
+    @classmethod
+    def from_dict(cls, data: Mapping[str, Any]) -> "ImageProcessingPipelineStep":
+        name = data["name"]
+        params = {k: v for k, v in data.items() if k != "name"}
+
+        load_all()
+        try:
+            _, model = get_pipeline_function_and_model(name)
+        except Exception:
+            model = None
+
+        if model is None:
+            return cls(name, **params)
+
+        try:
+            m = model.model_validate(params)
+        except ValidationError as e:
+            raise ValueError(f"[{name}] parameters failed validation: {e}") from e
+
+        field_names = type(m).model_fields.keys()
+        native_params = {name: getattr(m, name) for name in field_names}
+        return cls(name, **native_params)
+    
 ImageProcessingPipeline: TypeAlias = Iterable[ImageProcessingPipelineStep]
 
 @dataclass
@@ -62,9 +109,21 @@ class PipelineFunction(Protocol):
         **kwargs: Any,
     ) -> Image: ...
 
+def output_bytes(image: Image) -> BytesIO:
+    buffer = BytesIO()
+    image.save(buffer, format="PNG")
+    buffer.seek(0)
+    return buffer
+
+
+def output_file(image: Image, output: Path | str) -> Path:
+    output = Path(output)
+    output.parent.mkdir(parents=True, exist_ok=True)
+    image.save(output, format="PNG")
+    return output
 
 _registry: Dict[str, Tuple[PipelineFunction, Optional[Type[BaseModel]]]] = {}
-
+_LOADED = False
 
 def pipeline_function(name: str, param_model: Optional[Type[BaseModel]] = None):
     def deco(fn: PipelineFunction) -> PipelineFunction:
@@ -83,8 +142,79 @@ def pipeline_function(name: str, param_model: Optional[Type[BaseModel]] = None):
 
     return deco
 
+def _iter_submodules(package: str):
+    pkg = import_module(package)
+    for modinfo in pkgutil.iter_modules(pkg.__path__, package + "."):
+        yield modinfo.name
+        
+def load_all(package: str = "dashboard.image_processing_pipeline") -> None:
+    global _LOADED
+    if _LOADED:
+        return
+    for fullname in _iter_submodules(package):
+        import_module(fullname)  # importing triggers decorators
+    _LOADED = True
+
+@pipeline_function("noop")
+def noop(image: Image, _) -> Image:
+    return image
+
+#Public API
+class PipelineJSONEncoder(json.JSONEncoder):
+    def default(self, o):
+        if isinstance(o, ImageProcessingPipelineStep):
+            return o.to_dict()
+        return super().default(o)
+
+def pipeline_object_hook(obj):
+    if "name" in obj and any(k for k in obj.keys() if k != "name"):
+        return ImageProcessingPipelineStep.from_dict(obj)
+    return obj
+
+def pipeline_to_jsonable(p: Iterable[ImageProcessingPipelineStep]) -> list[dict[str, Any]]:
+    return [step.to_dict() for step in p]
+
+def pipeline_from_jsonable(data: list[dict[str, Any]]) -> list[ImageProcessingPipelineStep]:
+    return [ImageProcessingPipelineStep.from_dict(d) for d in data]
+
+def load_pipeline(data: list[dict[str, Any]]) -> list[ImageProcessingPipelineStep]:
+    """
+    Accepts JSON-like data (list of dicts), validates kwargs per step (if a
+    Pydantic model is registered), and returns a list of Step objects.
+    """
+    load_all()
+    steps_json: list[dict[str, Any]] = []
+
+    for raw in data:
+        name = raw.get("name")
+        if not name:
+            raise ValueError("Pipeline step missing 'name'")
+
+        # Split name/params
+        params = {k: v for k, v in raw.items() if k != "name"}
+
+        # Optional Pydantic validation (normalize values)
+        _, param_model = _registry.get(name, (None, None))
+        if param_model:
+            params = param_model.model_validate(params).model_dump()
+
+        steps_json.append({"name": name, **params})
+
+    # Convert JSONable dicts -> Step objects
+    return pipeline_from_jsonable(steps_json)
+
+
+def dump_pipeline(steps: list[ImageProcessingPipelineStep]) -> list[dict[str, Any]]:
+    """
+    Converts a list of Step objects into JSON-serializable dicts.
+    Use this before saving into a JSONField.
+    """
+    load_all()
+    return pipeline_to_jsonable(steps)
+
 
 def get_pipeline_function_and_model(name: str) -> Tuple[PipelineFunction, Type[BaseModel] | None]:
+    load_all()
     result = _registry.get(name, None)
     if not result:
         available = ", ".join(sorted(_registry))
@@ -94,53 +224,14 @@ def get_pipeline_function_and_model(name: str) -> Tuple[PipelineFunction, Type[B
     return result
 
 def get_pipeline_function(name: str) -> PipelineFunction:
+    load_all()
     return get_pipeline_function_and_model(name)[0]
 
-def output_bytes(image: Image) -> BytesIO:
-    buffer = BytesIO()
-    image.save(buffer, format="PNG")
-    buffer.seek(0)
-    return buffer
 
-
-def output_file(image: Image, output: Path | str) -> Path:
-    output = Path(output)
-    output.parent.mkdir(parents=True, exist_ok=True)
-    image.save(output, format="PNG")
-    return output
-
-
-@pipeline_function("noop")
-def noop(image: Image, _) -> Image:
-    return image
-
-def default_to_image(input: Image | BytesIO | bytes | Path) -> Image:
+def _default_to_image(input: Image | BytesIO | bytes | Path) -> Image:
     if isinstance(input, Image):
         return input
     return open(input).convert("RGB")
-
-class PipelineStepModel(BaseModel):
-    name: str
-    # any extra keys should go into kwargs
-    class Config:
-        extra = "allow"
-
-def load_pipeline(data: list[dict[str, Any]]) -> list[ImageProcessingPipelineStep]:
-    steps: list[ImageProcessingPipelineStep] = []
-    for step_dict in data:
-        name = step_dict.get("name")
-        if not name:
-            raise ValueError("Pipeline step missing 'name'")
-
-        _, param_model = _registry.get(name, (None, None))
-        kwargs = {k: v for k, v in step_dict.items() if k != "name"}
-
-        if param_model:
-            kwargs = param_model.model_validate(kwargs).model_dump()
-
-        steps.append(ImageProcessingPipelineStep(name, kwargs=kwargs))
-    return steps
-
 
 def process(
     input: Image | BytesIO | bytes | Path,
@@ -151,7 +242,8 @@ def process(
     classification: GenericImageClassification | None = None,
     logger: BaseLogger | None = None,
 ):
-    image=default_to_image(input)
+    load_all()
+    image=_default_to_image(input)
     if not logger:
         logger = ConsoleLogger()
     if output_format == ImageProcessingOutputEnum.FILE and not output_path:

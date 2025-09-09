@@ -34,6 +34,8 @@ if [[ $START_FRESH -eq 1 ]]; then
 
   # Run reset commands inside a one-off container
   docker compose --env-file "$ENV_FILE" -f "$COMPOSE_FILE" run --rm app bash -lc '
+    set -euo pipefail
+    python manage.py flush --noinput
     find dashboard/migrations -type f ! -name "__init__.py" -delete
     python manage.py makemigrations dashboard
     python manage.py migrate --noinput
@@ -47,4 +49,4 @@ User.objects.create_superuser(\"${ADMIN_USERNAME}\", \"${ADMIN_EMAIL}\", \"${ADM
 fi
 
 echo "▶ Starting dev stack with $ENV_FILE"
-docker compose --env-file "$ENV_FILE" -f "$COMPOSE_FILE" up --build 
+docker compose --env-file "$ENV_FILE" -f "$COMPOSE_FILE" up --build

@@ -37,5 +37,5 @@ class Variant(models.Model):
 
 
     def __str__(self) -> str:
-        return f"Variant({self.pk}): {self.path} (artstyle:{self.art_style})"
+        return f"Variant({self.pk}): {self.path} (art_style:{self.art_style})"
 

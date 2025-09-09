@@ -11,7 +11,7 @@ def settings():
         if "dashboard_appsettings" not in connection.introspection.table_names():
             return _default_settings()
 
-        from ..models import AppSettings
+        from ..models.app_settings import AppSettings
         return AppSettings.get_solo()
     except (OperationalError, ProgrammingError):
         return _default_settings()
@@ -19,8 +19,6 @@ def settings():
 def _default_settings():
     class Defaults:
         setup_completed = False
-        source_image_dir = "/app/input"
-        generate_image_dir = "/app/generate"
         discovery_port = 51234
         openai_key = None
         openweathermap_key = None

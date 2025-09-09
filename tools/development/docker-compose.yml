@@ -7,8 +7,9 @@ services:
       POSTGRES_DB: ${POSTGRES_DB}
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_PORT: ${POSTGRES_PORT}
     ports:
-      - "5432:5432"
+      - "127.0.0.1:${POSTGRES_PORT:-5432}:${POSTGRES_PORT:-5432}"
     volumes:
       - ./volumes/postgres:/var/lib/postgresql/data
     healthcheck:
@@ -46,7 +47,7 @@ services:
       - ${IMAGE_INPUT_DIR}:/app/input
       - ${GENERATED_OUTPUT_DIR}:/app/generate 
     ports:
-      - "8000:8000"
+      - "127.0.0.1:8000:8000"
       - "${DISCOVERY_PORT:-51234}:${DISCOVERY_PORT:-51234}"
     command: ["start.sh"]
 

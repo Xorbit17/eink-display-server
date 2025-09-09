@@ -1,4 +1,5 @@
 from __future__ import annotations
+from dashboard.server_types import BaseLogger
 from dashboard.services.app_settings import settings
 from dashboard.jobs.job_registry import JobErrorException
 from dashboard.services.openai import openai_client
@@ -22,7 +23,7 @@ CLASSIFY_PROMPT_TEMPLATE = (
 ).read_text()
 
 
-def classify_image(path: str | Path) -> GenericImageClassification:
+def classify_image(path: str | Path, *, logger: BaseLogger) -> GenericImageClassification:
     """
     Upload an image and ask OpenAI to classify its suitability for e-ink portrait generation.
     Returns the model's text response.
@@ -39,6 +40,7 @@ def classify_image(path: str | Path) -> GenericImageClassification:
     mime = MIME_BY_EXT.get("jpg") if ext == "heic" else MIME_BY_EXT.get(ext)
     image_b64 = file_to_base64(p)
     prompt = render_md_prompt(CLASSIFY_PROMPT_TEMPLATE, get_content_type_prompt_context())
+    logger.debug(f"Classify prompt:\n---\n{prompt}")
     text_format = get_classification_model()
 
     response = openai_client.responses.parse(
@@ -65,4 +67,4 @@ def classify_image(path: str | Path) -> GenericImageClassification:
     if response.output_parsed is None:
         raise JobErrorException("Classification function did not succeed")
     
-    return cast(GenericImageClassification,response.output_parsed.model_dump())
+    return GenericImageClassification(**(response.output_parsed.model_dump()))
