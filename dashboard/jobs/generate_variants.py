@@ -1,5 +1,5 @@
 from pathlib import Path
-from dashboard.constants import RenderDecision
+from dashboard.constants import RenderDecision, GENERATED_OUTPUT_DIR
 from dashboard.jobs.job_registry import job_function
 from dashboard.services.app_settings import settings
 from dashboard.models.job import Job
@@ -93,7 +93,7 @@ def generate_variants(
         )
         input = Path(src.path)
         output_path = (
-            Path("/app/generate").resolve()
+            Path(GENERATED_OUTPUT_DIR).resolve()
             / "variants"
             / f"variants_{src.pk}.png"
         )

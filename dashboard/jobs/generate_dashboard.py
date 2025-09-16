@@ -11,6 +11,7 @@ from dashboard.image_processing_pipeline import (
     ImageProcessingPipelineStep,
     process,
 )
+from dashboard.constants import GENERATED_OUTPUT_DIR
 from dashboard.color_constants import PaletteEnum
 
 DASHBOARD_PIPELINE: ImageProcessingPipeline = [
@@ -27,7 +28,7 @@ def generate_dashboard(job: Job, logger: JobLogger, **kwargs):
 
     logger.info("Generating dashboard")
     out_path = (
-        Path("/app/generate").resolve()
+        Path(GENERATED_OUTPUT_DIR).resolve()
         / "dashboards"
         / f"last_dashboard-{now.strftime('%Y%m%d')}.png"
     )

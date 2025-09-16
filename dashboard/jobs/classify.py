@@ -10,6 +10,8 @@ from dashboard.services.logger_job import JobLogger
 from dashboard.services.scoring import calculate_static_score_for_source
 from dashboard.constants import (
     IMAGE_EXTENSIONS,
+    IMAGE_INPUT_DIR,
+    GENERATED_OUTPUT_DIR,
 )
 from dashboard.services.classify_image import classify_image
 from dashboard.jobs.job_registry import job_function
@@ -21,13 +23,13 @@ import json
 def find_files() -> set[str]:
     """Return absolute paths of images in settings.source_image_dir (no subdirs)."""
     try:
-        entries = os.listdir("/app/input")
+        entries = os.listdir(IMAGE_INPUT_DIR)
     except FileNotFoundError:
-        raise RuntimeError("Image source directory does not exist \"/app/input\" in the container)")
+        raise RuntimeError(f"Image source directory does not exist \"{IMAGE_INPUT_DIR}\" in the container)")
 
     files = set()
     for f in entries:
-        full = os.path.join("/app/input", f)
+        full = os.path.join(IMAGE_INPUT_DIR, f)
         if os.path.isfile(full) and os.path.splitext(f)[1].lower() in IMAGE_EXTENSIONS:
             files.add(full)
     return files
