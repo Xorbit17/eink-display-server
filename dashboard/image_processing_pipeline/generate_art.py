@@ -49,6 +49,7 @@ def openai_process(
             "content_type_prompt": content_type.generator_prompt,
             "art_style": artstyle_record.name,
             "artstyle_prompt": artstyle_record.generator_prompt,
+            "aspect_ratio": "PORTRAIT 2:3",
         }
     )
     prompt = render_md_prompt(ART_GENERATOR_PROMPT_TEMPLATE, prompt_context)

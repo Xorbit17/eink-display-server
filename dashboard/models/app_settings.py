@@ -34,5 +34,17 @@ class AppSettings(SingletonModel):
         help_text="Model for image classification."
     )
 
+    image_source_dir = models.CharField(
+        max_length=255,
+        default="~/Pictures",
+        help_text="Folder where to find source images to classify and regenerated"
+    )
+
+    image_generation_dir = models.CharField(
+        max_length=255,
+        default="~/Pictures/generated",
+        help_text="Folder where to output generated images."
+    )
+
     def __str__(self):
         return "Application Settings"

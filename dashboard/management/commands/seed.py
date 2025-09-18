@@ -34,7 +34,9 @@ class Command(BaseCommand):
         appSettings = AppSettings.get_solo()
         appSettings.discovery_port = int(os.environ.get("DISCOVERY_PORT","51234"))
         appSettings.openai_key=os.environ.get("OPENAI_API_KEY", None)
-        appSettings.openweathermap_key=os.environ.get("OPENWEATHERMAP_API_KEY", None)
+        appSettings.openweathermap_key = os.environ.get("OPENWEATHERMAP_API_KEY", None)
+        appSettings.image_source_dir = os.environ.get("IMAGE_INPUT_DIR", None) or "~/Pictures"
+        appSettings.image_generation_dir = os.environ.get("GENERATED_OUTPUT_DIR", None) or "~/Pictures/generated"
         appSettings.save()
 
         seed_jobs = [
@@ -183,11 +185,11 @@ class Command(BaseCommand):
         
         def no_quant_pipeline():
             return dump_pipeline([
-                ImageProcessingPipelineStep("resize_crop", resolution=(1200,1600))
+                ImageProcessingPipelineStep("resize_crop", resolution=(1200,1600), rotate=90)
             ])
         def quant_pipeline(palette: PaletteEnum):
             return dump_pipeline([
-                ImageProcessingPipelineStep("resize_crop", resolution=(1200,1600)),
+                ImageProcessingPipelineStep("resize_crop", resolution=(1200,1600), rotate=90),
                 ImageProcessingPipelineStep("quantize", palette=palette)
             ])
 

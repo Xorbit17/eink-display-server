@@ -131,8 +131,12 @@ def pipeline_function(name: str, param_model: Optional[Type[BaseModel]] = None):
             image: Image, context: ImageProcessingContext, /, *args: Any, **kwargs: Any
         ) -> Image:
             if param_model:
-                # Check
-                validated_kwargs = param_model.model_validate(dict(**kwargs)).model_dump()
+                # Validate parameters and preserve native Python types (e.g. enums)
+                validated_model = param_model.model_validate(dict(**kwargs))
+                validated_kwargs = {
+                    field: getattr(validated_model, field)
+                    for field in validated_model.__class__.model_fields.keys()
+                }
                 result = fn(image, context, *args, **validated_kwargs)
                 return result
             return fn(image, context, *args, **kwargs)

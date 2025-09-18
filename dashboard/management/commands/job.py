@@ -45,6 +45,6 @@ class Command(BaseCommand):
             key, value = item.split("=", 1)
             params[key] = value
 
-        test_job_sync(job_name,**params)
+        test_job_sync(job_name,rethrow=True, **params)
 
     

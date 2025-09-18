@@ -3,15 +3,13 @@ from __future__ import annotations
 import os
 import random
 from pathlib import Path
-from dashboard.services.app_settings import settings
 from dashboard.models.job import Job
 from dashboard.models.photos import SourceImage
 from dashboard.services.logger_job import JobLogger
 from dashboard.services.scoring import calculate_static_score_for_source
+from dashboard.services.app_settings import settings
 from dashboard.constants import (
     IMAGE_EXTENSIONS,
-    IMAGE_INPUT_DIR,
-    GENERATED_OUTPUT_DIR,
 )
 from dashboard.services.classify_image import classify_image
 from dashboard.jobs.job_registry import job_function
@@ -23,13 +21,13 @@ import json
 def find_files() -> set[str]:
     """Return absolute paths of images in settings.source_image_dir (no subdirs)."""
     try:
-        entries = os.listdir(IMAGE_INPUT_DIR)
+        entries = os.listdir(settings().image_source_dir)
     except FileNotFoundError:
-        raise RuntimeError(f"Image source directory does not exist \"{IMAGE_INPUT_DIR}\" in the container)")
+        raise RuntimeError(f"Image source directory does not exist \"{settings().image_source_dir}\" in the container)")
 
     files = set()
     for f in entries:
-        full = os.path.join(IMAGE_INPUT_DIR, f)
+        full = os.path.join(settings().image_source_dir, f)
         if os.path.isfile(full) and os.path.splitext(f)[1].lower() in IMAGE_EXTENSIONS:
             files.add(full)
     return files

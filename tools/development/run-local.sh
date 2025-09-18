@@ -26,7 +26,8 @@ DISCOVERY_PORT="${DISCOVERY_PORT:-51234}"
 ADMIN_USERNAME="${ADMIN_USERNAME:-dv}"
 ADMIN_PASSWORD="${ADMIN_PASSWORD}"
 ADMIN_EMAIL="${ADMIN_EMAIL}"
-ENV="dvelopment"
+# Ensure Django runs in dev mode unless overridden in .env.dev
+ENV="${ENV:-development}"
 
 # APIs (optional)
 # OPENAI_API_KEY:(Secret in .env.dev)

@@ -22,7 +22,6 @@ class JobLogger(BaseLogger):
             return
         self._seq += 1
         self._lines_written += 1
-        # NOTE: either add a JSONField 'context' to JobLogEntry OR drop it here:
         JobLogEntry.objects.create(
             execution=self.execution,
             level=level,
@@ -30,7 +29,7 @@ class JobLogger(BaseLogger):
             seq=self._seq,
             context=context
         )
-        print(f"{level}:{message}")
+        print(f"{level}:{message}", flush=True)
 
     def debug(self, msg, **ctx):
         self._write("DEBUG", msg, ctx or None)

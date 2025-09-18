@@ -31,8 +31,6 @@ OPENAI_PORTRAIT_SIZE= "1024x1536"
 OPENAI_SQUARE_SIZE= "1024x1024"
 OPENAI_LANDSCAPE_SIZE= "1536x1024"
 
-IMAGE_INPUT_DIR = os.environ.get("IMAGE_INPUT_DIR","~/Pictures")
-GENERATED_OUTPUT_DIR = os.environ.get("GENERATED_OUTPUT_DIR","~/Pictures/generated")
 class LabeledEnum(str, Enum):
     """
     An enum that has a label for each member, and can generate

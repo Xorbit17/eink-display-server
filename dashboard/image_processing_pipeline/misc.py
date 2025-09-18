@@ -1,5 +1,6 @@
 from typing import (
     Tuple,
+    Optional
 )
 
 from .pipeline_registry import ImageProcessingContext, pipeline_function
@@ -9,6 +10,7 @@ from pydantic import BaseModel
 
 class ResizeCropParameters(BaseModel):
     resolution: Tuple[int, int]
+    rotate: Optional[int] = 0
 
 
 @pipeline_function("resize_crop", ResizeCropParameters)
@@ -17,6 +19,7 @@ def resize_crop(
     context: ImageProcessingContext,
     *,
     resolution: Tuple[int, int],
+    rotate: int,
 ) -> Image.Image:
     target_w, target_h = resolution
     src_w, src_h = image.size
@@ -25,6 +28,9 @@ def resize_crop(
     new_w, new_h = int(src_w * scale), int(src_h * scale)
 
     resized = image.resize((new_w, new_h), resample=Image.Resampling.LANCZOS)
+
+    if (rotate):
+        image=image.rotate(rotate, expand=True)
 
     left = (new_w - target_w) // 2
     top = (new_h - target_h) // 2
