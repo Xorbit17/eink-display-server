@@ -1,0 +1,4 @@
+- Likes and dislike counter
+- 2 Dislikes is delete
+- Cleaning job
+- Optional pipeline function for navi button overlay

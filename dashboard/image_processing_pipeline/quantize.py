@@ -44,7 +44,13 @@ class QuantizeParameters(BaseModel):
 
 @pipeline_function("quantize",QuantizeParameters)
 def quantize_to_palette(img, context, *, palette: PaletteEnum) -> Image:
+    context.logger.info(f"Quantizing to palette: {palette.name}")
     base = img.convert("RGB")
-    pal = _build_P_mode_palette_image(palette.to_set())
-    q = base.quantize(palette=pal, dither=Dither.NONE)  # P-mode
-    return q.convert("RGB")
+    if (palette != PaletteEnum.NATIVE):
+        pal_step_1 = _build_P_mode_palette_image(palette.to_set())
+        base = base.quantize(palette=pal_step_1, dither=Dither.NONE).convert('RGB')
+    
+    pal_step_2 = _build_P_mode_palette_image(PaletteEnum.NATIVE.to_set())
+    q = base.quantize(palette=pal_step_2, dither=Dither.FLOYDSTEINBERG)
+    result = q.convert('P')
+    return result

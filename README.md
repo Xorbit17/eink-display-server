@@ -64,7 +64,7 @@ The project follows a client-server architecture:
 # Testing
 
 ```
-python manage.py job "classify" --params-json "{\"max_num_to_classify\":1}"
-python manage.py job "generate_variants" --params-json "{\"max_amount\":1}"
+python manage.py job "classify" --params-json "{\"max_num_to_classify\":3}"
+python manage.py job "generate_variants" --params-json "{\"max_amount\":3}"
 ```
 

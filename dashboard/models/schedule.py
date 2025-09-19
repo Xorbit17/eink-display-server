@@ -126,11 +126,17 @@ class WeeklyRule(models.Model):
     def resolve_mode(display: Display, now: Optional[datetime] = None) -> Mode:
         display.clear_expired_override()
 
-        local_now = timezone.localtime() if now is None else timezone.make_aware(now)
+        if now is None:
+            local_now = timezone.localtime()
+        else:
+            if not now.tzinfo:
+                local_now = timezone.make_aware(now)
+            else:
+                local_now = now
         # In case of override
         if display.override_mode and display.override_expires_at:
 
-            if now < display.override_expires_at:
+            if local_now < display.override_expires_at:
                 return cast(Mode,display.override_mode)
         # Normal case: schedule
         weekday = local_now.weekday()

@@ -24,15 +24,24 @@ def extract_rgb_set(palette: Dict[str, Any], *, coerce_lists: bool = False) -> S
     walk(palette)
     return out
 
+
 NATIVE_COLORS = [
-    (0, 0, 0), # black
-    (161, 164, 165), # grey
-    (208, 190, 71), # Yellow
-    (156, 72, 75), # red
-    (61, 59, 94), # Blue
-    (58, 91, 70), # green
-    (255, 255, 255) # white
+    (0, 0, 0), # black -> 0
+    (255, 255, 255), # white -> 1
+    (208, 190, 71), # Yellow -> 2
+    (156, 72, 75), # red -> 3
+    (61, 59, 94), # Blue -> 5
+    (58, 91, 70), # green -> 6
 ]
+# NATIVE_COLORS = [
+#     (0, 0, 0),
+#     (255, 255, 255),
+#     (255, 255, 0),
+#     (255, 0, 0),
+#     (0, 0, 255),
+#     (0, 255, 0),
+#     (255, 255, 255),
+# ]
 EXTENDED_COLORS = [
     # --- Greyscale ---
     (81, 82, 83),      # dark grey

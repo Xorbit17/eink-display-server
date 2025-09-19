@@ -52,6 +52,7 @@ class Mode(LabeledEnum):
     NEWS = ("news", "Newspaper")
     PHOTO = ("photo", "Photo")
     DASHBOARD = ("dashboard", "Dashboard")
+    BOOT = ("boot", "Boot screen")
 
 class Weekday(IntEnum):
     MON = 0

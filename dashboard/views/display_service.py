@@ -9,6 +9,7 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.parsers import JSONParser
 from rest_framework import status
+from django.core.exceptions import ObjectDoesNotExist
 from django.utils import timezone
 from dashboard.models.schedule import Display
 from pathlib import Path
@@ -23,7 +24,7 @@ from dashboard.services.render_page import (
 )
 from dashboard.services.scoring import select_variant
 from pydantic import BaseModel, ValidationError, Field
-from typing import Literal, Annotated, TypeAlias
+from typing import Literal, Annotated, TypeAlias, Optional
 from dataclasses import dataclass, asdict
 import io
 
@@ -34,6 +35,7 @@ def _get_file_response(path: str | Path):
         return HttpResponse(status=404)
     response = FileResponse(open(normalisedPath, "rb"), content_type="image/png")
     response["Cache-Control"] = "no-store"
+    return response
 
 
 ResolutionDimension: TypeAlias = Annotated[int, Field(gt=0, lt=5000)]
@@ -121,6 +123,45 @@ class DisplayButtonController(APIView):
 
         return Response({"ok": True, "button": pressed}, status=status.HTTP_200_OK)
 
+def querydict_to_data(qd):
+    data = {}
+    for key, values in qd.lists():
+        if len(values) == 1:
+            data[key] = values[0]
+        else:
+            data[key] = values
+    return data
+
+class PollRequestURLQueryParams(BaseModel):
+    hardware_id: int
+
+@dataclass
+class PollResponseBody:
+    mode: Mode
+
+class DisplayPollController(APIView):
+    def get(self, request):
+        now = timezone.now()
+        raw = querydict_to_data(request.GET)
+        try:
+            params = PollRequestURLQueryParams.model_validate(raw)
+        except ValidationError as e:
+            # 400 Bad Request with structured errors
+            return JsonResponse(
+                {"detail": "Invalid query parameters", "errors": e.errors()},
+                status=400,
+            )
+        try:
+            display = Display.objects.get(hardware_id=params.hardware_id)
+        except ObjectDoesNotExist as e:
+            return JsonResponse(
+                {"detail": f"Display with hardware key {params.hardware_id} not found", "error": str(e)},
+                status=404,
+            )
+        mode = WeeklyRule.resolve_mode(display, now=now)
+        return JsonResponse(asdict(PollResponseBody(mode=mode)))
+
+
 
 class DisplayDashboardView(APIView):
     permission_classes = [IsAuthenticated]
@@ -152,17 +193,32 @@ class DisplayDashboardView(APIView):
         response["Cache-Control"] = "no-store"
         return response
 
+class DisplayVariantQueryParam(BaseModel):
+    pk: Optional[int] = None
 
 class DisplayVariantView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
         now = timezone.now()
+        raw = querydict_to_data(request.GET)
+        try:
+            params = DisplayVariantQueryParam.model_validate(raw)
+        except ValidationError as e:
+            # 400 Bad Request with structured errors
+            return JsonResponse(
+                {"detail": "Invalid query parameters", "errors": e.errors()},
+                status=400,
+            )
+        
         display = request.user.display
         display.last_seen = now
         display.save(update_fields=["last_seen"])
         try:
-            variant = select_variant(list(Variant.objects.all()))
+            if (params.pk is not None):
+                variant = Variant.objects.get(pk=params.pk)
+            else:
+                variant = select_variant(list(Variant.objects.all()))
         except Exception:
             return HttpResponseServerError(
                 "No variants have been generated. Is the variant creation job running and are source present?"

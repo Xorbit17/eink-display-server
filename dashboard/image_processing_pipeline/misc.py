@@ -29,12 +29,14 @@ def resize_crop(
 
     resized = image.resize((new_w, new_h), resample=Image.Resampling.LANCZOS)
 
-    if (rotate):
-        image=image.rotate(rotate, expand=True)
-
     left = (new_w - target_w) // 2
     top = (new_h - target_h) // 2
     right = left + target_w
     bottom = top + target_h
 
-    return resized.crop((left, top, right, bottom))
+    cropped = resized.crop((left, top, right, bottom))
+
+    if (rotate):
+        return cropped.rotate(rotate, expand=True)
+    else:
+        return cropped

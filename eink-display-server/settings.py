@@ -153,7 +153,7 @@ else:
 
 PUBLIC_BASE_URL = os.getenv("PUBLIC_BASE_URL", "http://localhost:8000")
 
-ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS", "localhost,127.0.0.1").split(",")
+ALLOWED_HOSTS = ['*'] # We trust everything as this server can only be reached from within the LAN
 CSRF_TRUSTED_ORIGINS = [PUBLIC_BASE_URL] if PUBLIC_BASE_URL.startswith("https") else []
 
 DATABASE_URL = os.getenv("DATABASE_URL")

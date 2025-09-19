@@ -1,5 +1,6 @@
 from pathlib import Path
 from dashboard.constants import RenderDecision
+from dashboard.color_constants import PaletteEnum
 from dashboard.jobs.job_registry import job_function
 from dashboard.services.app_settings import settings
 from dashboard.models.job import Job
@@ -52,7 +53,8 @@ class GenerateVariantParams(BaseModel):
 
 
 PHOTO_PIPELINE: List[ImageProcessingPipelineStep] = [
-    ImageProcessingPipelineStep("resize_crop", resolution=(1200, 1600))
+    ImageProcessingPipelineStep("resize_crop", resolution=(1200, 1600),rotate=90),
+    ImageProcessingPipelineStep("quantize", palette=PaletteEnum.NATIVE)
 ]
 
 
@@ -95,7 +97,7 @@ def generate_variants(
         output_path = (
             Path(settings().image_generation_dir).resolve()
             / "variants"
-            / f"variants_{src.pk}.png"
+            / f"variants_{newVariant.pk}.png"
         )
         if art_style == "KEEP_PHOTO":
             pipeline = PHOTO_PIPELINE

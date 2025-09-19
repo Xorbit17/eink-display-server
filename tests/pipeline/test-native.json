@@ -1,0 +1,14 @@
+[
+    {
+        "name": "resize_crop",
+        "resolution": [
+            1200,
+            1600
+        ],
+        "rotate": 90
+    },
+    {
+        "name": "quantize",
+        "palette": "NATIVE"
+    }
+]

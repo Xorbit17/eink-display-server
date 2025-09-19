@@ -47,8 +47,9 @@ def render_png(url: str,*, width=DEFAULT_W, height=DEFAULT_H,
 def run_eink_pipeline_for_page_in_memory(png_bytes: BytesIO)-> BytesIO:
     return process(
         png_bytes,
-        [
-            ImageProcessingPipelineStep("quantize",palette=PaletteEnum.EXTENDED)
+        [  
+            ImageProcessingPipelineStep("resize_crop",resolution=(1200,1600), rotate=90),
+            ImageProcessingPipelineStep("quantize",palette=PaletteEnum.EXTENDED),
         ],
         ) # type: ignore
 

@@ -183,10 +183,6 @@ class Command(BaseCommand):
 
         all_content_type_names = set([content_type.get("name") for content_type in seed_content_types])
         
-        def no_quant_pipeline():
-            return dump_pipeline([
-                ImageProcessingPipelineStep("resize_crop", resolution=(1200,1600), rotate=90)
-            ])
         def quant_pipeline(palette: PaletteEnum):
             return dump_pipeline([
                 ImageProcessingPipelineStep("resize_crop", resolution=(1200,1600), rotate=90),
