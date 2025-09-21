@@ -2,3 +2,4 @@
 - 2 Dislikes is delete
 - Cleaning job
 - Optional pipeline function for navi button overlay
+- Suggest art style in classification stage. Perhaps top three. Strings for classifier hint (tags: 'violent', 'action', 'natural')

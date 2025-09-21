@@ -249,6 +249,7 @@ class DisplayBootScreenView(APIView):
         buffer = io.BytesIO(png)
         buffer.seek(0)
         out_buffer = run_eink_pipeline_for_page_in_memory(buffer)
+        
         response = FileResponse(out_buffer, content_type="image/png")
         response["Cache-Control"] = "no-store"
         return response

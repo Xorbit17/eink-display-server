@@ -26,26 +26,23 @@
 
     --screen-width: 1200px;
     --screen-height: 1600px;
-    --unit-height: calc(100vh / 16);
+    --unit-height: calc(1600px / 16);
     --half-width: calc(var(--screen-width) /2);
 }
 
 /* Typography */
 html,
 body {
+    font-family: "Open Sans";
     background: var(--white);
     color: var(--text);
     font-size: 16pt;
-    line-height: 1.35;
+    line-height: 1;
     margin: 0;
     padding: 0;
-
     /* E-ink readability tweaks */
-    font-smooth: antialiased;
-}
-
-body {
-    font-family: system-ui, -apple-system, "Segoe UI", "DejaVu Sans", "Liberation Sans", Arial, sans-serif;
+    -webkit-font-smoothing: none;
+    font-smooth: none;
 }
 
 .bootstrap-container {
@@ -78,7 +75,7 @@ body {
 
 .title {
     font-weight: 700;
-    font-size: 1.15rem;
+    font-size: 20px;
     display: inline-flex;
     gap: 6px;
     align-items: center;
@@ -94,7 +91,7 @@ body {
     display: flex;
     gap: 10px;
     margin-top: 4px;
-    font-size: 0.95rem;
+    font-size: 12px;
 }
 
 .badge {
@@ -155,13 +152,9 @@ body {
     padding-bottom: 4px;
 }
 
-.scection-header.center {
-    text-align: center;
-}
-
 .section-header h2 {
     margin: 0;
-    font-size: 1.05rem;
+    font-size: 20px;
     display: inline-flex;
     gap: 6px;
     align-items: center;

@@ -196,7 +196,7 @@ class Command(BaseCommand):
                 "name": "communist-poster",
                 "description": "Art style reminiscent of propaganda posters from Russian or Asian communism.",
                 "pre_pipeline": [],
-                "post_pipeline": quant_pipeline(PaletteEnum.EXTENDED),
+                "post_pipeline": quant_pipeline(PaletteEnum.NATIVE),
                 "generator_prompt": (artstyle_prompt_path / "communist-poster.md"),
                 "allowed_content_types": ["Person","People","Portrait"],
                 "score":0.5,

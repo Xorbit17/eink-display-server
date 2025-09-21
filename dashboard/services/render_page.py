@@ -10,7 +10,7 @@ DEFAULT_H = 1600
 def render_png(url: str,*, width=DEFAULT_W, height=DEFAULT_H,
                wait_selector: str | None = None, extra_wait_ms: int = 0,
                no_sandbox: bool = False) -> bytes:
-    launch_args = ["--disable-dev-shm-usage"]
+    launch_args = ["--disable-dev-shm-usage", "--disable-lcd-text"]
     if no_sandbox:
         launch_args += ["--no-sandbox", "--disable-setuid-sandbox"]
     
@@ -50,6 +50,7 @@ def run_eink_pipeline_for_page_in_memory(png_bytes: BytesIO)-> BytesIO:
         [  
             ImageProcessingPipelineStep("resize_crop",resolution=(1200,1600), rotate=90),
             ImageProcessingPipelineStep("quantize",palette=PaletteEnum.EXTENDED),
+            ImageProcessingPipelineStep("p_mode_eink_optimize"),
         ],
         ) # type: ignore
 

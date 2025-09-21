@@ -34,7 +34,7 @@ def decide_art_style(classification: GenericImageClassification) -> ArtStyleType
         return "KEEP_PHOTO"
 
     # From this point renderDecision is artify
-    content_type_record=ContentType.objects.get(name=classification.contentType)
+    content_type_record = ContentType.objects.get(name=classification.contentType)
     artstyles = list(
         Artstyle.objects.filter(
             artstylecontenttype__content_type=content_type_record.pk
@@ -47,28 +47,28 @@ def decide_art_style(classification: GenericImageClassification) -> ArtStyleType
     return random_art_style.name
 
 
+PHOTO_PIPELINE: List[ImageProcessingPipelineStep] = [
+    ImageProcessingPipelineStep("resize_crop", resolution=(1200, 1600), rotate=90),
+    ImageProcessingPipelineStep("p_mode_eink_optimize"),
+]
+
 class GenerateVariantParams(BaseModel):
     art_style_override: str | None = None
     max_amount: int = 10
-
-
-PHOTO_PIPELINE: List[ImageProcessingPipelineStep] = [
-    ImageProcessingPipelineStep("resize_crop", resolution=(1200, 1600),rotate=90),
-    ImageProcessingPipelineStep("quantize", palette=PaletteEnum.NATIVE)
-]
-
 
 @job_function("generate_variants", GenerateVariantParams)
 def generate_variants(
     job: Job,
     logger: JobLogger,
     art_style_override: str | None,
-    max_amount: int,
+    max_amount: int = 10,
 ):
     qs = SourceImage.objects.all()
     selection = select_random_sources(list(qs), max_amount)
     for i, src in enumerate(selection):
-        classification = GenericImageClassification.from_dict(get_classification_model().model_validate(src.classification).model_dump())
+        classification = GenericImageClassification.from_dict(
+            get_classification_model().model_validate(src.classification).model_dump()
+        )
 
         art_style = (
             art_style_override
@@ -110,7 +110,7 @@ def generate_variants(
                 pre_pipeline
                 + [ImageProcessingPipelineStep("openai_filter", art_style=art_style)]
                 + post_pipeline
-                
+                + [ImageProcessingPipelineStep("p_mode_eink_optimize")]
             )
 
         prefixLogger = PrefixedLogger(
