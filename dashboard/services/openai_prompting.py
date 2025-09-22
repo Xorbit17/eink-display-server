@@ -1,19 +1,33 @@
 from __future__ import annotations
 from django.template import Engine, Context
+from django.db.models import QuerySet
 from dashboard.constants import (
     QualityClassification,
     RenderDecision,
 )
-from dashboard.models.art import ContentType
-from pydantic import BaseModel
-from typing import Literal, Mapping, Any
+from dashboard.models.art import ContentType, Artstyle
+from pydantic import BaseModel, Field
+from typing import Literal, Mapping, Any, Union, Iterable, List
 from functools import lru_cache
 from dataclasses import dataclass, asdict
 
-
 @lru_cache(maxsize=1)
+def get_artstyles_for_content_type(content_type: Union[ContentType, int, str]) -> QuerySet[Artstyle]:
+    if isinstance(content_type, ContentType):
+        content_type_record = content_type
+    elif isinstance(content_type, int):
+        content_type_record = ContentType.objects.get(pk=content_type)
+    else:
+        content_type_record = ContentType.objects.get(name=content_type)
+
+    return Artstyle.objects.filter(artstylecontenttype__content_type=content_type_record).distinct().order_by("-score", "name")
+
+def get_artstyle_names(content_type: Union[ContentType, int, str], artstyles: Iterable[Artstyle] | None = None):
+    if artstyles is None:
+        artstyles = get_artstyles_for_content_type(content_type)
+    return [a.name for a in artstyles]
+
 def get_content_type_names() -> tuple[str, ...]:
-    # return a stable tuple for Literal unpacking
     return tuple(ContentType.objects.order_by("name").values_list("name", flat=True))
 
 
@@ -81,6 +95,50 @@ def get_classification_model() -> type[BaseModel]:
         qualityClassificationExplanation: str
 
     return ImageClassification
+
+def get_artstyle_choices_model(content_type: Union[ContentType, int, str]) -> type[BaseModel]:
+    if isinstance(content_type, ContentType):
+        content_type_record = content_type
+    elif isinstance(content_type, int):
+        content_type_record = ContentType.objects.get(pk=content_type)
+    else:
+        content_type_record = ContentType.objects.get(name=content_type)
+    names = get_artstyle_names(content_type_record)
+    ArtStyleLiteral = Literal[("CATCH_ALL",)] if not names else Literal[*names]
+
+    class ArtStyleChoice(BaseModel):
+        name: ArtStyleLiteral # type: ignore
+        motivation: str
+        context: str
+
+    class ArtStyleChoices(BaseModel):
+        styles: List[ArtStyleChoice]
+
+    return ArtStyleChoices
+
+@dataclass
+class GenericArtStyleChoice:
+    name: str
+    motivation: str
+    context: str
+
+    @classmethod
+    def from_dict(cls, data: Mapping[str, Any]) -> "GenericArtStyleChoice":
+        return cls(
+            name=data["name"],
+            motivation=data["motivation"],
+            context=data["context"]
+        )
+
+@dataclass
+class GenericArtStyleChoices:
+    styles: List[GenericArtStyleChoice]
+
+    @classmethod
+    def from_dict(cls, data: Mapping[str, Any]) -> "GenericArtStyleChoices":
+        return cls(
+            styles=[GenericArtStyleChoice.from_dict(d) for d in data["styles"]]
+        )
 
 
 _engine = Engine([], autoescape=False)

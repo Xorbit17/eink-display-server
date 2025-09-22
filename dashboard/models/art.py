@@ -1,5 +1,6 @@
 from django.db import models
 from typing import Literal, TypeAlias
+from dashboard.color_constants import PALETTE_CHOICES
 
 class ContentType(models.Model):
     name = models.CharField(max_length=255)
@@ -22,6 +23,7 @@ class Artstyle(models.Model):
     description = models.TextField()
     pre_pipeline = models.JSONField(default=dict)
     post_pipeline = models.JSONField(default=dict)
+    palette = models.CharField(max_length=64, choices=PALETTE_CHOICES, default=None, null=True)
     generator_prompt = models.TextField()
     score = models.FloatField(default=0.5)
 

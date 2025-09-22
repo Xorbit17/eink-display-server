@@ -21,7 +21,7 @@ You will output a classification depending on the type of content you see in the
 
 You will output one of the keys in the preceding list depending on the type of content of the image.
 
-# Quality checklists (choose the strongest matching tier)
+# Quality classification (choose the strongest matching tier)
 
 ## **`VERY_GOOD`**
 - Main subject (typically a person/pet) is tack-sharp; eyes crisp if a face.

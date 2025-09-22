@@ -2,31 +2,13 @@ from typing import Any, Dict, Set, Tuple, TypeAlias, List
 from enum import Enum
 from dashboard.constants import LabeledEnum
 from dashboard.server_types import RGB
+from PIL import Image, ImageDraw
+from functools import cache
 
-def extract_rgb_set(palette: Dict[str, Any], *, coerce_lists: bool = False) -> Set[Tuple[int, int, int]]:
-    out: Set[Tuple[int, int, int]] = set()
+color: TypeAlias = Tuple[Tuple[int,int,int],str] | Tuple[Tuple[int,int,int],str, str]
+PaletteDict: TypeAlias = Dict[str,List[color]]
 
-    def walk(x: Any) -> None:
-        # exact tuples of length 3
-        if isinstance(x, tuple) and len(x) == 3 and all(isinstance(c, int) for c in x):
-            out.add(x)
-            return
-        if coerce_lists and isinstance(x, list) and len(x) == 3 and all(isinstance(c, int) for c in x):
-            out.add(tuple(x))
-            return
-        if isinstance(x, dict):
-            for v in x.values():
-                walk(v)
-        elif isinstance(x, (list, tuple, set)):
-            for v in x:
-                walk(v)
-
-    walk(palette)
-    return out
-
-color: TypeAlias = Tuple[int,int,int]
-
-def mix_color(*colors: color, weights: list[float] | None = None) -> color:
+def mix_color(*colors: color, weights: list[float] | None = None, name: str | None = None) -> color:
     if not colors:
         raise ValueError("At least one color must be provided.")
 
@@ -39,125 +21,191 @@ def mix_color(*colors: color, weights: list[float] | None = None) -> color:
     if total_weight == 0:
         raise ValueError("Sum of weights must not be zero.")
 
-    r = sum(c[0] * w for c, w in zip(colors, weights)) / total_weight
-    g = sum(c[1] * w for c, w in zip(colors, weights)) / total_weight
-    b = sum(c[2] * w for c, w in zip(colors, weights)) / total_weight
+    r = sum(c[0][0] * w for c, w in zip(colors, weights)) / total_weight
+    g = sum(c[0][1] * w for c, w in zip(colors, weights)) / total_weight
+    b = sum(c[0][2] * w for c, w in zip(colors, weights)) / total_weight
+    name = name if name else "-".join([x[1] for x in colors])
+    return ((int(round(r)), int(round(g)), int(round(b))), name)
 
-    return (int(round(r)), int(round(g)), int(round(b)))
-
-def shades(start: color, end: color, steps: int) -> List[color]:
+def shades(start: color, end: color, steps: int, base_name: str) -> List[color]:
     if steps < 1:
         return []
 
     result: List[color] = []
     for i in range(1, steps + 1):
         t = i / (steps + 1)  # normalized fraction (skip 0 and 1)
-        r = round(start[0] + (end[0] - start[0]) * t)
-        g = round(start[1] + (end[1] - start[1]) * t)
-        b = round(start[2] + (end[2] - start[2]) * t)
-        result.append((r, g, b))
+        r = round(start[0][0] + (end[0][0] - start[0][0]) * t)
+        g = round(start[0][1] + (end[0][1] - start[0][1]) * t)
+        b = round(start[0][2] + (end[0][2] - start[0][2]) * t)
+        percent_shift = round(i * 100.0/(steps + 1))
+        name = f"{base_name}-{percent_shift}"
+        result.append(((r, g, b),name))
     return result
 
+def extract_rgb_set(palette: Dict[str, List[color]], *, coerce_lists: bool = False) -> Set[Tuple[int, int, int]]:
+    out: Set[Tuple[int, int, int]] = set()
+    for _,v  in palette.items():
+        for c in v:
+            out.add(c[0])
+    return out
+
+def generate_tints_shades(base_color_list: List[color],steps=3) -> List[color]:
+    result: List[color] = []
+    for c in base_color_list:
+        result = result + shades(c,WHITE,steps,base_name=f"{c[1]}-lighter")
+        result = result + shades(c,BLACK,steps,base_name=f"{c[1]}-darker")
+    return result
+
+
 # Native colors the e-ink screen is capable of
-BLACK = (0,0,0)
-WHITE = (0,0,0)
-YELLOW = (208, 190, 71)
-RED = (156, 72, 75)
-BLUE = (61, 59, 94)
-GREEN = (58, 91, 70)
+BLACK: color =  ((0,0,0), "black")
+WHITE: color =  ((255,255,255), "white")
+YELLOW: color =  ((208, 190, 71), "yellow","eink-yellow")
+RED: color =  ((156, 72, 75), "red","eink-red")
+BLUE: color =  ((61, 59, 94), "blue","eink-blue")
+GREEN: color =  ((58, 91, 70), "green","eink-green")
 
-NATIVE_COLORS = [
-    BLACK, # -> 0
-    WHITE, # -> 1
-    YELLOW, # Yellow -> 2
-    RED, # red -> 3
-    BLUE, # Blue -> 5
-    GREEN, # green -> 6
+NATIVE_COLORS: List[color] = [
+    BLACK ,       # -> 0
+    WHITE,         # -> 1
+    YELLOW,       # -> 2
+    RED,             # -> 3
+    BLUE,           # -> 4
+    GREEN,         # -> 5
 ]
 
-EXTENDED_COLORS = [
-    mix_color(BLACK, WHITE), # Grey
-    mix_color(YELLOW, RED), # Orange
-    mix_color(RED, BLUE), # Purple
-    mix_color(BLUE, GREEN) # Cyan
+BASE_COLORS: List[color] = [
+    YELLOW,       # -> 2
+    RED,             # -> 3
+    BLUE,           # -> 4
+    GREEN,         # -> 5
 ]
 
-SKINTONES = [
-    (255, 235, 220), # Pale
-    (229, 194, 165), # Caucasian
-    (170, 120, 90), # Brown
-    (96, 70, 60) # Black
-    ]
+# These colors look subjectively nice on the e-ink screen after dithering
+EXTENDED_COLORS: List[color] = [
+    mix_color(BLACK, WHITE, weights=[0.2, 0.8], name="light-grey"),
+    mix_color(BLACK, WHITE, weights=[0.8, 0.2], name="dark-grey"),
+    mix_color(YELLOW, RED, name="orange"),
+    mix_color(RED, BLUE, name="purple"),
+    mix_color(BLUE, GREEN, name="navy"),
+    mix_color(BLUE, YELLOW, weights=[0.3, 0.7],name="dirty-yellow"),
+    mix_color(BLUE, BLACK, WHITE, weights=[0.5, 0.3, 1.0], name="sky-blue"),
+    mix_color(RED, GREEN, name="brown"),
+]
 
-WOOD_COLORS = [
-    (222, 184, 135),  # Pine (light beige-brown with yellow tone)
-    (160, 82, 45),    # Oak (medium warm brown)
-    (38, 26, 26),     # Ebony (very dark brown, almost black)
+EXTENDED_BASE_COLORS: List[color] = [
+    mix_color(YELLOW, RED, name="orange"),
+    mix_color(RED, BLUE, name="purple"),
+    mix_color(BLUE, GREEN, name="navy"),
+    mix_color(RED, GREEN, name="brown"),
+]
+
+SKINTONES: List[color] = [
+    ((255, 235, 220), "skin-pale"),
+    ((229, 194, 165), "skin-caucasian"),
+    ((170, 120, 90), "skin-brown"),
+    ((96, 70, 60), "skin-black"),
+]
+
+WOOD_COLORS: List[color] = [
+    ((222, 184, 135), "wood-pine"),   # light beige-brown with yellow tone
+    ((160, 82, 45), "wood-oak"),      # medium warm brown
+    ((38, 26, 26), "wood-ebony"),     # very dark brown, almost black
 ]
 
 # Palette definitions
 
-NATIVE_PALETTE = {
+NATIVE_PALETTE: PaletteDict = {
     "native": NATIVE_COLORS,
 }
 
-GRAYSCALE_PALETTE = {
-    "grayscale": [
+BLACK_WHITE_PALETTE: PaletteDict = {
+    "black-white": [
         BLACK,
         WHITE,
     ],
 }
 
-EXTENDED_PALETTE = {
+EXTENDED_PALETTE: PaletteDict = {
     "native": NATIVE_COLORS,
     "extended": EXTENDED_COLORS,
 }
 
-# Seems problematic
-SHADED_PALETTE = {
+NATIVE_SHADED_PALETTE: PaletteDict = {
+    "native": NATIVE_COLORS,
+    "grayscale": shades(WHITE, BLACK,3,base_name="grey"),
+    "shades": generate_tints_shades(BASE_COLORS,3)
+}
+NATIVE_EXTENDED_SHADED_PALETTE: PaletteDict = {
+    "native": NATIVE_COLORS,
+    "extended": EXTENDED_COLORS,
+    "grayscale": shades(WHITE, BLACK,3,base_name="grey"),
+    "shades": generate_tints_shades(BASE_COLORS,3),
+    "extended-shades": generate_tints_shades(EXTENDED_BASE_COLORS,3),
+}
+NATIVE_EXTENDED_SHADED_SKIN_PALETTE: PaletteDict = {
+    "native": NATIVE_COLORS,
+    "extended": EXTENDED_COLORS,
+    "grayscale": shades(WHITE, BLACK,3,base_name="grey"),
+    "shades": generate_tints_shades(BASE_COLORS,3),
+    "extended-shades": generate_tints_shades(EXTENDED_BASE_COLORS,3),
+    "skin_tones": SKINTONES,
+}
+
+NATIVE_SKIN_PALETTE: PaletteDict = {
     "native": NATIVE_COLORS,
     "skin_tones": SKINTONES,
-    "grayscale": shades(BLACK, WHITE,3),
-    # Tints = mix with white at 0/25/50/75/100%
-    "red_tints": shades(RED,WHITE,3) ,
-    "green_tints": shades(GREEN,WHITE,3),
-    "blue_tints": shades(BLUE,WHITE,3),
-    # Shades = mix with black at 0/25/50/75/100%
-    "red_shades": shades(RED,BLACK,3),
-    "green_shades": shades(GREEN,BLACK,3),
-    "blue_shades": shades(BLUE,BLACK,3),
-
 }
 
-NATIVE_WITH_SKIN_PALETTE = {
-    "native": NATIVE_COLORS,
-    "skin_tones": SKINTONES
-}
-
-EXTENDED_NATIVE_SKIN_PALETTE = {
+NATIVE_SKIN_EXTENDED_PALETTE: PaletteDict = {
     "native": NATIVE_COLORS,
     "extended": EXTENDED_COLORS,
     "skin_tones": SKINTONES,
 }
 
-WOODCUT_PALETTE = {
+WOODCUT_PALETTE: PaletteDict = {
     "wood": WOOD_COLORS,
     "black_white": [BLACK, WHITE],
 }
 
-WOOD_EXTENDED_PALETTE = {
+WOOD_EXTENDED_PALETTE: PaletteDict = {
     "wood": WOOD_COLORS,
     "native": NATIVE_COLORS,
     "extended": EXTENDED_COLORS,
 }
 
+def make_canvas(width: int = 1200, height: int = 1600, color: color = ((255, 255, 255), "white")) -> Image.Image:
+    return Image.new("RGB", (width, height), color[0])
+
+def draw_square(img: Image.Image, top_left: Tuple[int, int], size: int, color: color) -> None:
+    draw = ImageDraw.Draw(img)
+    x, y = top_left
+    draw.rectangle([x, y, x + size, y + size], fill=color[0])
+
+SWATCH_SIZE = 64
+
+PALETTE_CHOICES = [
+    ("NATIVE", "Native"),
+    ("EXTENDED", "Extended"),
+    ("NATIVE_SHADED", "Shaded"),
+    ("NATIVE_EXTENDED_SHADED", "Shaded + Extended"),
+    ("NATIVE_EXTENDED_SHADED_SKIN", "Shaded + Extended"),
+    ("NATIVE_SKIN", "Native + Skin Tones"),
+    ("NATIVE_SKIN_EXTENDED", "Extended + Native + Skin Tones"),
+    ("BLACK_WHITE", "Black-white"),
+    ("WOODCUT", "Woodcut"),
+    ("WOOD_EXTENDED", "Wood extended"),
+]
+
 class PaletteEnum(LabeledEnum):
     NATIVE = (NATIVE_PALETTE, "Native")
     EXTENDED = (EXTENDED_PALETTE, "Extended")
-    SHADED = (SHADED_PALETTE, "Shaded")
-    NATIVE_WITH_SKIN = (NATIVE_WITH_SKIN_PALETTE, "Native + Skin Tones")
-    EXTENDED_NATIVE_SKIN = (EXTENDED_NATIVE_SKIN_PALETTE, "Extended + Native + Skin Tones")
-    GRAYSCALE = (GRAYSCALE_PALETTE, "Grayscale")
+    NATIVE_SHADED = (NATIVE_SHADED_PALETTE, "Shaded")
+    NATIVE_EXTENDED_SHADED = (NATIVE_EXTENDED_SHADED_PALETTE, "Shaded + Extended")
+    NATIVE_EXTENDED_SHADED_SKIN = (NATIVE_EXTENDED_SHADED_SKIN_PALETTE, "Shaded + Extended")
+    NATIVE_SKIN = (NATIVE_SKIN_PALETTE, "Native + Skin Tones")
+    NATIVE_SKIN_EXTENDED = (NATIVE_SKIN_EXTENDED_PALETTE, "Extended + Native + Skin Tones")
+    BLACK_WHITE = (BLACK_WHITE_PALETTE, "Black-white")
     WOODCUT = (WOODCUT_PALETTE, "Woodcut")
     WOOD_EXTENDED = (WOOD_EXTENDED_PALETTE, "Wood extended")
     
@@ -165,8 +213,40 @@ class PaletteEnum(LabeledEnum):
         """Return this palette as a set of RGB tuples."""
         return extract_rgb_set(self.value)
 
+    @cache
+    def make_color_swatch_image(self, canvas_res: tuple[int,int] | None = None) -> Image.Image:
+        palette_dict = self.value
+        if canvas_res is not None:
+            canvas = make_canvas()
+            rows = len(palette_dict)
+            columns = max([len(palette_dict[key]) for key in palette_dict])
+            size = min(1200 // columns, 1600 // rows)
+        else:
+            size = SWATCH_SIZE
+            rows = len(palette_dict)
+            columns = max([len(palette_dict[key]) for key in palette_dict])
+            canvas = make_canvas(columns * size, rows * size)
+        
+        cursor = (0,0)
+        for k,v in palette_dict.items():
+            for c in v:
+                draw_square(canvas, cursor,size,c)
+                cursor = (cursor[0] + size, cursor[1])
+            cursor = (0, cursor[1]+size)
+        
+        return canvas
+    
+    def to_css_vars(self) -> str:
+        out_lines = [":root {"]
+        for _,v in self.value.items():
+            for c in v:
+                css_name = c[2] if len(c) == 3 else c[1].lower().sub(r"\s+","-")
+                out_lines.append(f"    --{css_name}: rgb({c[0][0]},{c[0][1]},{c[0][2]});")
+        out_lines.append("}\n")
+        return "\n".join(out_lines)
+
     @classmethod
-    def get(cls, name: str) -> Set[RGB]:
+    def get_color_set(cls, name: str) -> Set[RGB]:
         """
         Retrieve a palette set by enum key (case-insensitive).
         
@@ -180,6 +260,7 @@ class PaletteEnum(LabeledEnum):
         return member.to_set()
     
 if __name__ == "__main__":
+    from pathlib import Path
     for palette in PaletteEnum:
-        print (f"{palette.name}:{palette.to_set()}") # type: ignore
-    # TODO generate a test image
+        filename = Path("/home/dv/Documents/eink-display-server/tests/colors") / f"color_swatch_{palette.name}.png"
+        palette.make_color_swatch_image().save(filename)

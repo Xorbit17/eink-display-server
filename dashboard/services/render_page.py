@@ -3,6 +3,7 @@ from typing import cast
 from dashboard.image_processing_pipeline import process, ImageProcessingPipelineStep
 from dashboard.color_constants import PaletteEnum
 from io import BytesIO
+from PIL.Image import Image
 
 DEFAULT_W = 1200
 DEFAULT_H = 1600
@@ -43,6 +44,17 @@ def render_png(url: str,*, width=DEFAULT_W, height=DEFAULT_H,
         png_bytes = page.screenshot(full_page=False, omit_background=False, type="png")
         browser.close()
         return png_bytes
+
+def run_eink_pipeline_for_image_in_memory(image: Image)-> BytesIO:
+    return process(
+        image,
+        [  
+            ImageProcessingPipelineStep("resize_crop",resolution=(1200,1600), rotate=90),
+            ImageProcessingPipelineStep("p_mode_eink_optimize"),
+        ],
+        ) # type: ignore
+
+
     
 def run_eink_pipeline_for_page_in_memory(png_bytes: BytesIO)-> BytesIO:
     return process(

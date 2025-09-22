@@ -21,3 +21,4 @@ dashboard/static/svg/*
 .ruff_cache
 
 tools/*/volumes
+tests/colors/*.png

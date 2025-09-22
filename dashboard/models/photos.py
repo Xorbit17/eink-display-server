@@ -31,6 +31,7 @@ class Variant(models.Model):
     content_type = models.CharField(max_length=64)
     photorealist = models.BooleanField()
     favorite = models.BooleanField(default=False)
+    generation_context = models.TextField(null=True, default=None)
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

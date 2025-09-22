@@ -13,6 +13,7 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.utils import timezone
 from dashboard.models.schedule import Display
 from pathlib import Path
+from dashboard.color_constants import PaletteEnum
 from dashboard.models.application import PrerenderedDashboard
 from dashboard.models.schedule import WeeklyRule
 from dashboard.models.photos import Variant
@@ -21,6 +22,7 @@ from dashboard.services.display import create_new_display
 from dashboard.services.render_page import (
     render_png,
     run_eink_pipeline_for_page_in_memory,
+    run_eink_pipeline_for_image_in_memory,
 )
 from dashboard.services.scoring import select_variant
 from pydantic import BaseModel, ValidationError, Field
@@ -249,6 +251,43 @@ class DisplayBootScreenView(APIView):
         buffer = io.BytesIO(png)
         buffer.seek(0)
         out_buffer = run_eink_pipeline_for_page_in_memory(buffer)
+        
+        response = FileResponse(out_buffer, content_type="image/png")
+        response["Cache-Control"] = "no-store"
+        return response
+
+class DisplayPaletteQueryParam(BaseModel):
+    palette_name: Optional[str] = "shaded"
+
+class DisplayPaletteView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        now = timezone.now()
+        raw = querydict_to_data(request.GET)
+        try:
+            params = DisplayPaletteQueryParam.model_validate(raw)
+        except ValidationError as e:
+            # 400 Bad Request with structured errors
+            return JsonResponse(
+                {"detail": "Invalid query parameters", "errors": e.errors()},
+                status=400,
+            )
+        
+        display = request.user.display
+        display.last_seen = now
+        display.save(update_fields=["last_seen"])
+        try:
+            if (params.palette_name is not None):
+                palette = PaletteEnum[params.palette_name.upper()]
+            else:
+                palette = PaletteEnum.NATIVE_EXTENDED_SHADED_SKIN
+        except Exception:
+            return HttpResponseServerError(
+                "No variants have been generated. Is the variant creation job running and are source present?"
+            )
+        image = palette.make_color_swatch_image(canvas_res=(1200,1600))
+        out_buffer = run_eink_pipeline_for_image_in_memory(image)
         
         response = FileResponse(out_buffer, content_type="image/png")
         response["Cache-Control"] = "no-store"

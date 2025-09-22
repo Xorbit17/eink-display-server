@@ -4,14 +4,19 @@ import pkgutil
 from enum import Enum
 from typing import Dict, Any, Tuple, Type, Protocol, Iterable, Mapping, TypeAlias
 from dashboard.server_types import BaseLogger, ConsoleLogger
+from dashboard.services.app_settings import settings
 from pathlib import Path
-
+from django.conf import settings as django_settings
+from django.utils import timezone
 from typing import Optional
 from pydantic import BaseModel, ValidationError
 from PIL.Image import Image, open
 from dataclasses import dataclass, field
 from io import BytesIO
 import json
+from pathlib import Path
+from datetime import datetime
+
 
 from dashboard.services.openai_prompting import GenericImageClassification
 
@@ -97,6 +102,7 @@ class ImageProcessingContext:
     current_step_name: str
     current_step_arguments: Dict[str, Any]
     logger: BaseLogger
+    invocation_start_time: datetime
     classification: GenericImageClassification | None = None
 
 class PipelineFunction(Protocol):
@@ -260,7 +266,8 @@ def process(
         output_format = ImageProcessingOutputEnum.BYTES
     if output_path and output_format == ImageProcessingOutputEnum.BYTES:
         logger.warn("Something weird is going on. Output path was specified and output type is bytes (no file output)")
-
+    now = timezone.now()
+    now_file_str = now.strftime("%Y%m%d%H%M%S")
     for i, step in enumerate(pipeline):
         context = ImageProcessingContext(
             pipeline=pipeline,
@@ -268,9 +275,16 @@ def process(
             current_step_name=step.name,
             current_step_arguments=step.kwargs,
             logger=logger,
+            invocation_start_time=now,
             classification=classification,
         )
         image = get_pipeline_function_and_model(step.name)[0](image, context, **step.kwargs)
+        if django_settings.DEBUG:
+            out_dir = Path(settings().image_generation_dir) / "pipeline_debug" / f"invocation_{now_file_str}"
+            out_dir.mkdir(parents=True, exist_ok=True)
+            out_path = out_dir / f"step_{i}.png"
+            image.save(out_path)
+
     if output_format == ImageProcessingOutputEnum.FILE:
         return output_file(image, output_path)  # type: ignore
     if output_format == ImageProcessingOutputEnum.BYTES:
