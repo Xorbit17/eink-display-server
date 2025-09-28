@@ -66,5 +66,10 @@ The project follows a client-server architecture:
 ```
 python manage.py job "classify" --params-json "{\"max_num_to_classify\":10}"
 python manage.py job "generate_variants" --params-json "{\"max_amount\":5}"
+
+python manage.py job "get_weather"
+python manage.py job "get_calendar"
+
+python manage.py job "generate_dashboard"
 ```
 

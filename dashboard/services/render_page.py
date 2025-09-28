@@ -61,7 +61,7 @@ def run_eink_pipeline_for_page_in_memory(png_bytes: BytesIO)-> BytesIO:
         png_bytes,
         [  
             ImageProcessingPipelineStep("resize_crop",resolution=(1200,1600), rotate=90),
-            ImageProcessingPipelineStep("quantize",palette=PaletteEnum.EXTENDED),
+            ImageProcessingPipelineStep("quantize",palette=PaletteEnum.EXTENDED, dither=False),
             ImageProcessingPipelineStep("p_mode_eink_optimize"),
         ],
         ) # type: ignore

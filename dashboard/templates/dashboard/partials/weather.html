@@ -18,13 +18,13 @@
                     {% weather_svg day.detail.icon "MEDIUM" %}
                 </div>
                  <div class="wc-rain">
-                    <p>
-                        <span class="icon icon-xsmall icon-blue">{%svg "droplet.svg" %}</span>
+                    <p style="white-space: nowrap;">
+                        <span class="icon icon-small icon-blue">{%svg "droplet.svg" %}</span>
                         <span>{{day.percipitation_probability_pct}}%</span>
                     </p>
                 </div>
                 <div class="wc-wind">
-                    <p><span class="icon icon-xsmall icon-orange">{%svg "windsock.svg" %}</span>&nbsp;<span class="wc-wind-dir">{{day.wind_dir_letters}}</span></p>
+                    <p style="white-space: nowrap;"><span class="icon icon-small icon-orange">{%svg "windsock.svg" %}</span><span class="wc-wind-dir">{{day.wind_dir_letters}}</span></p>
                     <p><span class="wc-wind-bft">{{day.wind_speed_bft}}</span>&nbsp;Bft</p>
                 </div>
                 <div class="wc-temp wc-avg-min-max">

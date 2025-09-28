@@ -4,6 +4,7 @@ from dashboard.constants import LabeledEnum
 from dashboard.server_types import RGB
 from PIL import Image, ImageDraw
 from functools import cache
+from re import sub
 
 color: TypeAlias = Tuple[Tuple[int,int,int],str] | Tuple[Tuple[int,int,int],str, str]
 PaletteDict: TypeAlias = Dict[str,List[color]]
@@ -85,6 +86,7 @@ BASE_COLORS: List[color] = [
 EXTENDED_COLORS: List[color] = [
     mix_color(BLACK, WHITE, weights=[0.2, 0.8], name="light-grey"),
     mix_color(BLACK, WHITE, weights=[0.8, 0.2], name="dark-grey"),
+    mix_color(BLACK, WHITE, weights=[0.5, 0.5], name="grey"),
     mix_color(YELLOW, RED, name="orange"),
     mix_color(RED, BLUE, name="purple"),
     mix_color(BLUE, GREEN, name="navy"),
@@ -240,7 +242,7 @@ class PaletteEnum(LabeledEnum):
         out_lines = [":root {"]
         for _,v in self.value.items():
             for c in v:
-                css_name = c[2] if len(c) == 3 else c[1].lower().sub(r"\s+","-")
+                css_name = c[2] if len(c) == 3 else sub(r"\s+","-", c[1].lower())
                 out_lines.append(f"    --{css_name}: rgb({c[0][0]},{c[0][1]},{c[0][2]});")
         out_lines.append("}\n")
         return "\n".join(out_lines)
@@ -260,7 +262,8 @@ class PaletteEnum(LabeledEnum):
         return member.to_set()
     
 if __name__ == "__main__":
-    from pathlib import Path
-    for palette in PaletteEnum:
-        filename = Path("/home/dv/Documents/eink-display-server/tests/colors") / f"color_swatch_{palette.name}.png"
-        palette.make_color_swatch_image().save(filename)
+    # from pathlib import Path
+    # for palette in PaletteEnum:
+    #     filename = Path("/home/dv/Documents/eink-display-server/tests/colors") / f"color_swatch_{palette.name}.png"
+    #     palette.make_color_swatch_image().save(filename)
+    print(PaletteEnum.NATIVE_EXTENDED_SHADED.to_css_vars())

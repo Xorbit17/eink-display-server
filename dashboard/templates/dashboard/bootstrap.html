@@ -10,6 +10,8 @@
     <meta name="viewport" content="width=1200, initial-scale=1" />
     <link rel="stylesheet" href="{% static 'css/bootstrap.css' %}" />
     <style>
+        {{css_color_vars}}
+
         .splash > main {
             background-image: url("{% static 'img/bg_3.png' %}");
             background-size: cover;
@@ -20,7 +22,7 @@
 
 <body>
     <div class="bootstrap-container splash">
-        <main style="">
+        <main>
             <div class="card">
                 <header class="section-header">
                     <h2><span class="icon">{% svg "photo-cog.svg" %}</span> E-ink display client connected</h2>

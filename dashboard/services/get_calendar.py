@@ -7,6 +7,7 @@ import requests
 from django.utils import timezone
 import arrow
 from typing import Iterable
+from tatsu.exceptions import FailedParse
 
 
 def _day_bounds(dt_local: datetime):
@@ -43,7 +44,10 @@ def get_calendar(source_url: str, start: datetime, end: datetime | None = None) 
     if not timezone.is_aware(start) or ((end is not None) and not timezone.is_aware(end)):
         raise TypeError("Get calendar only takes time zone aware inputs.")
     text = requests.get(source_url).text
-    c = Calendar(text)
+    try:
+        c = Calendar(text)
+    except FailedParse:
+        raise Exception(f"Failed to parse calendar ICAL.\n{text[:500]}")
     if end is None:
         return list(c.timeline.start_after(arrow.get(start)))
     result = [

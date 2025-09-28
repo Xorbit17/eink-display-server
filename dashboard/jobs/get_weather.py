@@ -68,7 +68,7 @@ def process_record(
 
 
 @job_function("get_weather")
-def get_weather(_, logger: JobLogger, params):
+def get_weather(_, logger: JobLogger, params = None):
     now = timezone.now()
     locations = Location.objects.all()
     for location in locations:

@@ -665,7 +665,7 @@ class Command(BaseCommand):
                 created += 1
                 self.stdout.write(self.style.SUCCESS(f"Created ArtstyleContentType: {art_style.name}-{content_type.name}"))
 
-
+        
 
         self.stdout.write(
             self.style.SUCCESS(f"Seeding complete. Created {created}, Updated {updated}")

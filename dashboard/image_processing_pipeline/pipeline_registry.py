@@ -241,6 +241,9 @@ def get_pipeline_function(name: str) -> PipelineFunction:
 def _default_to_image(input: Image | BytesIO | bytes | Path) -> Image:
     if isinstance(input, Image):
         return input
+    if isinstance(input, bytes):
+        input = BytesIO(input)
+    
     return open(input).convert("RGB")
 
 def process(

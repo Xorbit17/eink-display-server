@@ -122,16 +122,11 @@ def _linear_to_srgb(u):
 
 @pipeline_function("quantize", QuantizeParameters)
 def quantize_to_palette(img, context, *, palette: PaletteEnum, dither: bool) -> Image:
-    context.logger.info(f"Quantizing to palette: {palette.name}")
+    context.logger.info(f"Quantizing to palette: {palette.name} with dither option {'ON' if dither else 'OFF'}")
     result = img.convert('RGB')
     pal_image = _build_P_mode_palette_image(palette.to_set())
     dither_mode = Dither.FLOYDSTEINBERG if dither else Dither.NONE
-    result = result.quantize(palette=pal_image, dither=dither_mode, method=Quantize.FASTOCTREE).convert("RGB")
-    if palette != PaletteEnum.NATIVE:
-        pal_step_2 = _build_P_mode_palette_image(PaletteEnum.NATIVE.to_set())
-        result = result.quantize(palette=pal_step_2, dither=Dither.FLOYDSTEINBERG)
-
-    result = result
+    result = result.quantize(palette=pal_image, dither=dither_mode, method=dither_mode).convert("RGB")
     return result
 
 @pipeline_function("p_mode_eink_optimize", None)

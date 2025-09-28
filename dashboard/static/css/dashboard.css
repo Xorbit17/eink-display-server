@@ -1,28 +1,12 @@
 :root {
-    /*E-ink optimised*/
-    --red: rgb(156, 72, 75);
-    --green: rgb(58, 91, 70);
-    --blue: rgb(61, 59, 94);
-    --yellow: rgb(208, 190, 71);
-    --orange: rgb(185, 118, 110);
-    --purple: rgb(109, 66, 85);
-    --black: rgb(0, 0, 0);
-    --white: rgb(255, 255, 255);
-    --dark-grey: rgb(81, 82, 83);
-    --grey: rgb(161, 164, 165);
-    --very-light-grey: rgb(242, 242, 242);
-    --light-grey: rgb(208, 210, 210);
-    --light-blue: rgb(158, 157, 175);
+    --accent: var(--eink-blue);
+    --accent-bg: var(--blue-lighter-50);
 
-    --accent: var(--blue);
-    --accent-bg: var(--ligt-blue);
-
-    --bg: var(--very-light-grey);
-    /* very light grey, keep as-is */
+    --bg: var(----white);
     --bg-card: var(--white);
     --border: var(--black);
-    --border-medium: var(--dark-grey);
-    --border-light: var(--grey);
+    --border-medium: var(--grey-50);
+    --border-light: var(--grey-25);
 
     --screen-width: 1200px;
     --screen-height: 1600px;
@@ -33,16 +17,16 @@
 /* Typography */
 html,
 body {
+    font-family: "Open Sans";
     background: var(--white);
     color: var(--text);
-    font-size: 12pt;
-    line-height: 1.35;
+    font-size: 16pt;
+    line-height: 1;
     margin: 0;
     padding: 0;
-
     /* E-ink readability tweaks */
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
+    -webkit-font-smoothing: none;
+    font-smooth: none;
 }
 
 body {
@@ -66,60 +50,60 @@ body {
     align-content: flex-start;
     width: var(--screen-width);
     height: var(--screen-height);
-    gap: 16px 16px;
-    padding: 16px;
+    gap: 4px 4px;
+    padding: 4px;
 }
 
 .card {
     background: var(--bg-card);
+    border: 1px solid var(--border);
     padding: 8px 10px;
     border-radius: 12px;
-    box-shadow: 5px 5px 0px var(--light-grey);
     box-sizing: border-box;
 }
 
 .header {
-    flex: 0 1 calc(var(--screen-width) - 24px);
+    flex: 0 1 calc(var(--screen-width) - 8px);
     height: var(--unit-height);
 }
 
 .weather {
-    flex: 0 1 calc(var(--screen-width) - 24px);
+    flex: 0 1 calc(var(--screen-width) - 8px);
     height: calc(var(--unit-height) * 3);
 }
 
 .memory {
-    flex: 0 1 calc(var(--half-width) - 24px);
+    flex: 0 1 calc(var(--half-width) - 6px);
     height: calc(var(--unit-height) * 3);
 }
 
 .cpu {
-    flex: 0 1 calc(var(--half-width) - 24px);
+    flex: 0 1 calc(var(--half-width) - 6px);
     height: calc(var(--unit-height) * 3);
 }
 
 .network {
-    flex: 0 1 calc(var(--half-width) - 24px);
+    flex: 0 1 calc(var(--half-width) - 6px);
     height: calc(var(--unit-height) * 3);
 }
 
 .disk {
-    flex: 0 1 calc(var(--half-width) - 24px);
+    flex: 0 1 calc(var(--half-width) - 6px);
     height: calc(var(--unit-height) * 2);
 }
 
 .docker {
-    flex: 0 1 calc(var(--half-width) - 24px);
+    flex: 0 1 calc(var(--half-width) - 6px);
     height: calc(var(--unit-height) * 3);
 }
 
 .calendar {
-    flex: 0 1 calc(var(--half-width) - 24px);
+    flex: 0 1 calc(var(--screen-width) - 8px);
     height: calc(var(--unit-height) * 5);
 }
 
 .transmission {
-    flex: 0 1 calc(var(--half-width) - 24px);
+    flex: 0 1 calc(var(--half-width) - 8px);
     height: calc(var(--unit-height) * 3);
 }
 
@@ -129,7 +113,7 @@ body {
     justify-content: space-between;
     align-items: baseline;
     margin-bottom: 6px;
-    border-bottom: 2px solid var(--border-medium);
+    border-bottom: 2px solid var(--border);
     padding-bottom: 6px;
     min-width: 0;
     /* allow shrink */
@@ -147,6 +131,14 @@ body {
     font-weight: 700;
     margin-bottom: 2px;
     font-size: larger;
+}
+
+.disk-subtitle {
+    font-weight: 700;
+    margin-bottom: 2px;
+    font-size: larger;
+    max-width: 120px;
+    line-break: anywhere;
 }
 
 .disk-size-label {
@@ -195,19 +187,19 @@ body {
 }
 
 .alert.info {
-    background: var(--blue-10);
+    background: var(--eink-blue);
 }
 
 .alert.warning {
-    background: var(--yellow-10);
+    background: var(--eink-yellow);
 }
 
 .alert.danger {
-    background: var(--red-10);
+    background: var(--eink-red);
 }
 
 .alert.good {
-    background: var(--green-10);
+    background: var(--eink-green);
 }
 
 /* Section headers */
@@ -216,7 +208,7 @@ body {
     justify-content: space-between;
     align-items: baseline;
     margin-bottom: 8px;
-    border-bottom: 2px solid var(--border-medium);
+    border-bottom: 2px solid var(--border);
     padding-bottom: 4px;
 }
 
@@ -239,7 +231,7 @@ body {
 .weather-cards>.weather-card {
     padding-right: 12px;
     margin-right: 12px;
-    border-right: 2px dashed var(--border-light);
+    border-right: 1px dashed var(--border);
 }
 
 .weather-cards>.weather-card:last-child {
@@ -254,12 +246,9 @@ body {
     box-sizing: border-box;
 }
 
-
-
 .weather-card p {
     padding: 0;
     margin: 0;
-    line-height: 1.1;
 }
 
 .wc-title {
@@ -293,7 +282,6 @@ body {
 
 .wc-rain {
     grid-area: wc-rain;
-    font-size: small;
 }
 
 .wc-temp {
@@ -324,12 +312,12 @@ body {
 
 .wc-avg-min-max .min {
     font-size: small;
-    color: var(--blue);
+    color: var(--eink-blue);
 }
 
 .wc-avg-min-max .max {
     font-size: small;
-    color: var(--red);
+    color: var(--eink-red);
 }
 
 .wc-wind-dir {
@@ -386,7 +374,7 @@ body {
 .disk-list>div {
     padding-right: 12px;
     margin-right: 12px;
-    border-right: 2px dashed var(--border-light);
+    border-right: 1px dashed var(--border);
 }
 
 .disk-list>div:last-child {
@@ -457,7 +445,7 @@ body {
 }
 
 .tbl thead th {
-    background: var(--blue-10);
+    background: var(--eink-blue);
     text-align: left;
 }
 
@@ -483,18 +471,18 @@ body {
 .status-dot.running,
 .status-dot.healthy,
 .status-dot.good {
-    background: var(--green);
+    background: var(--eink-green);
 }
 
 .status-dot.exited,
 .status-dot.stopped {
-    background: var(--yellow);
+    background: var(--eink-yellow);
 }
 
 .status-dot.unhealthy,
 .status-dot.error,
 .status-dot.failed {
-    background: var(--red);
+    background: var(--eink-red);
 }
 
 .status-dot.unknown {
@@ -614,19 +602,19 @@ body {
 }
 
 .icon-red {
-    color: var(--red)
+    color: var(--eink-red)
 }
 
 .icon-green {
-    color: var(--green)
+    color: var(--eink-green)
 }
 
 .icon-blue {
-    color: var(--blue)
+    color: var(--eink-blue)
 }
 
 .icon-yellow {
-    color: var(--yellow-dark-50)
+    color: var(--eink-yellow)
 }
 
 .icon-grey {

@@ -1,27 +1,13 @@
 :root {
-    --red: rgb(156, 72, 75);
-    --green: rgb(58, 91, 70);
-    --blue: rgb(61, 59, 94);
-    --yellow: rgb(208, 190, 71);
-    --orange: rgb(185, 118, 110);
-    --purple: rgb(109, 66, 85);
-    --black: rgb(0, 0, 0);
-    --white: rgb(255, 255, 255);
-    --dark-grey: rgb(81, 82, 83);
-    --grey: rgb(161, 164, 165);
-    --very-light-grey: rgb(242, 242, 242);
-    --light-grey: rgb(208, 210, 210);
-    --light-blue: rgb(158, 157, 175);
+    --accent: var(--eink-blue);
+    --accent-bg: var(--blue-lighter-25);
 
-    --accent: var(--blue);
-    --accent-bg: var(--ligt-blue);
-
-    --bg: var(--very-light-grey);
+    --bg: var(--light-grey);
     /* very light grey, keep as-is */
     --bg-card: var(--white);
     --border: var(--black);
     --border-medium: var(--dark-grey);
-    --border-light: var(--grey);
+    --border-light: var(--grey-50);
 
     --screen-width: 1200px;
     --screen-height: 1600px;

@@ -7,6 +7,7 @@ from django.utils import timezone
 from django.http import JsonResponse
 from django.core.exceptions import ObjectDoesNotExist
 from dashboard.models.schedule import Display
+from dashboard.color_constants import PaletteEnum
 from pydantic import BaseModel, ValidationError
 import socket
 import psutil
@@ -40,6 +41,7 @@ class KeyValue:
 
 @dataclass
 class BootScreenData:
+    css_color_vars: str
     updated_at: datetime
     bootinfo: List[KeyValue]
     # TODO add schedule view
@@ -69,6 +71,7 @@ class BootScreenView(View):
 
         view_data = BootScreenData(
             updated_at=timezone.localtime(),
+            css_color_vars=PaletteEnum.NATIVE_EXTENDED_SHADED.to_css_vars(),
             bootinfo=[
                 KeyValue("Hostname", display.host),
                 KeyValue("Horizontal resolution", str(display.x_res) + " px"),

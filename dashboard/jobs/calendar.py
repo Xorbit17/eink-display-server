@@ -23,6 +23,7 @@ def get_calendar(_, logger: JobLogger, /, days_ahead):
     sources = CalendarSource.objects.filter(active=True)
 
     for source in sources:
+        logger.debug(f"Getting calendar: '{source.ics_url}'")
         with transaction.atomic():
             for e in service.get_calendar(source.ics_url, start_day,end):
                 CalendarOccurrence.objects.update_or_create(

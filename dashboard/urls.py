@@ -21,7 +21,7 @@ urlpatterns = [
     path("photo", PhotoView.as_view(), name="photo"),
     path("bootstrap", BootScreenView.as_view(), name="bootstrap"),
     path("api/display/variant", DisplayVariantView.as_view(), name="display-image"),
-    path("api/display/dashboard", DisplayDashboardView.as_view(), name="display-image"),
+    path("api/display/dashboard", DisplayDashboardView.as_view(), name="display-dashboard"),
     path(
         "api/display/splash_screen",
         DisplayBootScreenView.as_view(),

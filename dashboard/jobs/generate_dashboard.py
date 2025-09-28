@@ -14,7 +14,9 @@ from dashboard.image_processing_pipeline import (
 from dashboard.color_constants import PaletteEnum
 
 DASHBOARD_PIPELINE: ImageProcessingPipeline = [
-    ImageProcessingPipelineStep("quantize", palette=PaletteEnum.NATIVE)
+    ImageProcessingPipelineStep("resize_crop", resolution=(1200, 1600), rotate=90),
+    ImageProcessingPipelineStep("quantize", palette=PaletteEnum.NATIVE_EXTENDED_SHADED, dither=False),
+    ImageProcessingPipelineStep("p_mode_eink_optimize")
 ]
 
 @job_function("generate_dashboard")
@@ -48,5 +50,5 @@ def generate_dashboard(job: Job, logger: JobLogger, **kwargs):
         logger=logger,
     )
 
-    newDashboard.path = str(out_path)  # Generation successful
+    newDashboard.path = str(out_path)
     newDashboard.save()

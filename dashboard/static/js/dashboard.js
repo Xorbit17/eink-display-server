@@ -25,24 +25,22 @@ function shadeColor(rgbStr, factor) {
     return rgbToString({r, g, b});
 }
 
-function getColor(colorString) {
-    if (Object.keys(colors).includes(colorString)) return colors[colorString];
-    return colorString;
-}
+
 
 // E-ink optimised
 const colors = {
-    red: getCssVar('--red'),
-    green: getCssVar('--green'),
-    blue: getCssVar('--blue'),
-    yellow: getCssVar('--yellow'),
+    red: getCssVar('--eink-red'),
+    green: getCssVar('--eink-green'),
+    lightGreen: getCssVar('--green-lighter-50'),
+    darkYellow: getCssVar('--yellow-darker-50'),
+    blue: getCssVar('--eink-blue'),
+    yellow: getCssVar('--eink-yellow'),
     orange: getCssVar('--orange'),
     black: getCssVar('--black'),
     white: getCssVar('--white'),
     darkGrey: getCssVar('--dark-grey'),
     grey: getCssVar('--grey'),
     lightGrey: getCssVar('--light-grey'),
-    lightBlue: getCssVar('--light-blue'),
     purple: getCssVar('--purple'),
     bg: getCssVar('--bg'),
     bgCard: getCssVar('--bg-card'),
@@ -51,8 +49,13 @@ const colors = {
     borderLight: getCssVar('--border-light'),
 };
 
+function getColor(colorString) {
+    if (Object.keys(colors).includes(colorString)) return colors[colorString];
+    return colorString;
+}
+
 Chart.defaults.backgroundColor = colors.white;
-Chart.defaults.scale.grid.color = colors.borderLight;
+Chart.defaults.scale.grid.color = colors.black;
 Chart.defaults.plugins.legend.display = false;
 
 const mapIdToYOptions = {
@@ -81,7 +84,7 @@ const defaultOptions = {
 
 // Disk graphs, json injectec by django
 const disks = JSON.parse(document.getElementById("disks-graph-data").textContent);
-const diskBackgroundColor = [colors.green, shadeColor(colors.green,1.5)];
+const diskBackgroundColor = [colors.green, colors.lightGreen];
 for (const d of disks.disks) {
     const data = {
         datasets: [
